@@ -1103,10 +1103,16 @@ function rBanner() {
       '<span>Google chiede una volta sola il permesso su questo file. Si chiama «' + esc(GD.FILE_NOME) + '».</span></div>' +
       '<button class="b pri" id="bGdBannerFile">Scegli il file</button>';
   } else {
+    var gia = gdConf().email;
     b.className = 'gdban';
-    h = '<div><b>Stai lavorando solo su questo computer.</b>' +
-      '<span>Accedi con Google per lavorare sull\'archivio condiviso con Omar, Giovanni e Salvo.</span></div>' +
-      '<button class="b pri" id="bGdBanner">Accedi con Google</button>';
+    h = gia
+      /* chi è già entrato una volta: Google non rinnova il permesso da solo, serve un clic */
+      ? '<div><b>Bentornato, ' + esc(gia.split('@')[0]) + '.</b>' +
+        '<span>Un clic per ricollegarti all\'archivio condiviso: Google non chiederà di nuovo né l\'account né i permessi.</span></div>' +
+        '<button class="b pri" id="bGdBanner">Ricollegati</button>'
+      : '<div><b>Stai lavorando solo su questo computer.</b>' +
+        '<span>Accedi con Google per lavorare sull\'archivio condiviso con Omar, Giovanni e Salvo.</span></div>' +
+        '<button class="b pri" id="bGdBanner">Accedi con Google</button>';
   }
   b.innerHTML = h;
 }
@@ -3661,7 +3667,9 @@ function gdRiprendi() {
         gdChiEntra();
       }
     });
+    gdStato('entro', 'provo a ricollegarmi…');
     gd.tc.requestAccessToken({prompt: ''});
+    setTimeout(function () { if (!gd.token) gdStato('spento'); }, 3000);
   }).catch(function () { gdStato('spento'); });
 }
 
