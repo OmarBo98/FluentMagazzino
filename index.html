@@ -1108,7 +1108,7 @@ function rBanner() {
     h = gia
       /* chi è già entrato una volta: Google non rinnova il permesso da solo, serve un clic */
       ? '<div><b>Bentornato, ' + esc(gia.split('@')[0]) + '.</b>' +
-        '<span>Un clic per ricollegarti all\'archivio condiviso: Google non chiederà di nuovo né l\'account né i permessi.</span></div>' +
+        '<span>Un clic per ricollegarti all\'archivio condiviso. Google non richiede i permessi: li hai già dati.</span></div>' +
         '<button class="b pri" id="bGdBanner">Ricollegati</button>'
       : '<div><b>Stai lavorando solo su questo computer.</b>' +
         '<span>Accedi con Google per lavorare sull\'archivio condiviso con Omar, Giovanni e Salvo.</span></div>' +
@@ -3347,7 +3347,8 @@ function gdEntra() {
         }
       });
     }
-    gd.tc.requestAccessToken({prompt: gd.email ? '' : 'select_account'});
+    /* se si è già entrati una volta su questo browser, niente scelta account né consenso */
+    gd.tc.requestAccessToken({prompt: (gd.email || gdConf().email) ? '' : 'select_account'});
   }).catch(function (e) { gdStato('errore', e.message); });
 }
 function gdChiEntra() {
