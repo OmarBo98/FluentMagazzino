@@ -633,7 +633,7 @@ tr.riga-no td{opacity:.5}
   <!-- ====================== 11 DATI ====================== -->
   <section class="sec" id="sec-dati">
     <h2 class="sec-h">Archivio e dati</h2>
-    <p class="sec-d">Caricamento di un nuovo inventario in Excel, esportazioni e copia di sicurezza. Tutti i dati restano in questo browser: nessun server.</p>
+    <p class="sec-d">Accesso Google, caricamento di un nuovo inventario in Excel, esportazioni e copia di sicurezza. Senza accesso i dati restano in questo browser; con l'accesso l'archivio è uno solo, sul Drive di Omar, condiviso fra i tre account autorizzati.</p>
     <div class="card"><h3>Accesso Google e archivio condiviso<span class="hint">i dati stanno sul Drive di Omar</span></h3>
       <div class="bd" id="gdBox"></div></div>
     <div class="g2">
@@ -4028,6 +4028,11 @@ var h0 = (location.hash || '').replace('#', '');
 cur = SEZ.indexOf(h0) >= 0 ? h0 : 'pan';
 vai(cur);
 segnaSalva(true);
+/* un indirizzo con #sezione cambia sezione anche a pagina già aperta */
+window.addEventListener('hashchange', function () {
+  var h = (location.hash || '').replace('#', '');
+  if (SEZ.indexOf(h) >= 0 && h !== cur) vai(h);
+});
 try { gdRiprendi(); } catch (e) { gdStato('spento'); }
 window.FM = {S: function () { return S; }, giac: giac, stato: stato, consumo: consumo,
   daOrdinare: daOrdinare, migliore: migliore, unitPrezzo: unitPrezzo, vai: vai, art: art,
