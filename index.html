@@ -347,6 +347,17 @@ tr.riga-no td{opacity:.5}
 .gdchip.salvo .pt,.gdchip.tiro .pt,.gdchip.entro .pt{background:var(--am-600);box-shadow:0 0 0 3px rgba(179,106,0,.22)}
 .gdchip.errore .pt,.gdchip.nega .pt{background:var(--ro-600);box-shadow:0 0 0 3px rgba(192,43,60,.22)}
 .gdchip.scegli .pt{background:var(--bl-600);box-shadow:0 0 0 3px rgba(31,95,168,.22)}
+
+.gdban{
+  display:flex;align-items:center;gap:16px;margin:0 0 18px;padding:13px 16px;border-radius:var(--r);
+  background:var(--em-50);border:1px solid var(--em-300);box-shadow:var(--sh-1);
+}
+.gdban div{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.gdban b{font-size:13.5px;color:var(--ink-900)}
+.gdban span{font-size:12.5px;color:var(--ink-600)}
+.gdban .b{flex:none}
+.gdban.go{background:var(--bl-50);border-color:var(--bl-100)}
+.gdban.no{background:var(--ro-50);border-color:var(--ro-100)}
 </style>
 </head>
 <body>
@@ -381,6 +392,7 @@ tr.riga-no td{opacity:.5}
   </nav>
 
   <main class="ff-pane" id="ffPane">
+  <div id="gdBanner"></div>
 
   <!-- ====================== 01 PANORAMICA ====================== -->
   <section class="sec on" id="sec-pan">
@@ -1075,7 +1087,31 @@ function prendiIlSegno() {
     }
   };
 }
+/* finché l'archivio condiviso non è collegato, lo si dice chiaramente in cima */
+function rBanner() {
+  var b = el('gdBanner');
+  if (!b) return;
+  if (gd.token && gd.fileId) { b.innerHTML = ''; b.className = ''; return; }
+  var h;
+  if (gd.stato === 'nega') {
+    b.className = 'gdban no';
+    h = '<div><b>' + esc(gd.email || 'Questo indirizzo') + ' non è fra gli account autorizzati.</b>' +
+      '<span>L\'archivio condiviso è riservato a Omar, Giovanni e Salvo. Esci da Google e rientra con l\'indirizzo giusto.</span></div>';
+  } else if (gd.token && !gd.fileId) {
+    b.className = 'gdban go';
+    h = '<div><b>Ultimo passaggio: scegli l\'archivio.</b>' +
+      '<span>Google chiede una volta sola il permesso su questo file. Si chiama «' + esc(GD.FILE_NOME) + '».</span></div>' +
+      '<button class="b pri" id="bGdBannerFile">Scegli il file</button>';
+  } else {
+    b.className = 'gdban';
+    h = '<div><b>Stai lavorando solo su questo computer.</b>' +
+      '<span>Accedi con Google per lavorare sull\'archivio condiviso con Omar, Giovanni e Salvo.</span></div>' +
+      '<button class="b pri" id="bGdBanner">Accedi con Google</button>';
+  }
+  b.innerHTML = h;
+}
 function rBadge() {
+  rBanner();
   var g = giacTutte(), urg = 0, sotto = 0;
   S.art.forEach(function (a) {
     var s = stato(a).k;
@@ -3237,6 +3273,9 @@ var GD = {
   SCOPE: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email',
   FILE_ID: '13-g4CcZsnG8Ip6oxbG_WACl3gqDI-Dve',
   FILE_NOME: 'FluentMagazzino — dati.json',
+  /* chiave della finestra di scelta file: serve solo al Picker ed è legata al dominio
+     omarbo98.github.io, quindi sta in pagina come prevede Google */
+  APIKEY: 'AIzaSyC52SBLqQOpc1WeCbjHvUcaPyKmyPoQr7E',
   AMMESSI: ['boscomar98@gmail.com', 'aleccigiovanni@gmail.com', 'bsmedcom@gmail.com']
 };
 var LS_GD = 'fluentmagazzino_gd';
@@ -3251,7 +3290,7 @@ function gdConf() {
 function gdConfScrivi(o) {
   try { localStorage.setItem(LS_GD, JSON.stringify(Object.assign(gdConf(), o))); } catch (e) {}
 }
-function gdApiKey() { return gdConf().apiKey || ''; }
+function gdApiKey() { return gdConf().apiKey || GD.APIKEY || ''; }
 
 function gdStato(st, nota) {
   gd.stato = st; gd.nota = nota || '';
@@ -3265,6 +3304,7 @@ function gdStato(st, nota) {
     c.title = gd.nota || '';
   }
   if (cur === 'dati') rGDrive();
+  rBanner();
 }
 
 /* ---------------------------- caricamento degli script ---------------------------- */
@@ -3382,10 +3422,12 @@ function gdScegli() {
     return new Promise(function (ris) {
       var viste = [];
       var v1 = new google.picker.DocsView(google.picker.ViewId.DOCS);
-      v1.setIncludeFolders(true).setOwnedByMe(false).setLabel('Condivisi con me');
+      v1.setOwnedByMe(false).setQuery('FluentMagazzino').setLabel('Condiviso con me');
       var v2 = new google.picker.DocsView(google.picker.ViewId.DOCS);
-      v2.setIncludeFolders(true).setLabel('Il mio Drive');
-      viste.push(v1, v2);
+      v2.setOwnedByMe(true).setQuery('FluentMagazzino').setLabel('Il mio Drive');
+      var v3 = new google.picker.DocsView(google.picker.ViewId.DOCS);
+      v3.setIncludeFolders(true).setLabel('Tutti i file');
+      viste.push(v1, v2, v3);
       var pb = new google.picker.PickerBuilder()
         .setAppId(GD.PROGETTO)
         .setOAuthToken(gd.token)
@@ -3590,10 +3632,10 @@ function rGDrive() {
       '</div>';
   }
   h += '<details class="acc" style="margin:12px 0 0"><summary>Chiave API di Google ' +
-    (k ? '<span class="p ok" style="margin-left:6px">impostata</span>' : '<span class="p manca" style="margin-left:6px">da impostare</span>') +
-    '</summary><div>' +
-    '<p style="font-size:12.5px;color:var(--ink-700);margin:0 0 8px">Serve solo per la finestra con cui Google ti fa scegliere il file, ' +
-    'la prima volta. Si crea una volta sola, in <code>console.cloud.google.com</code> col tuo account, nel progetto che già usi per Recupero Crediti:</p>' +
+    '<span class="p ok" style="margin-left:6px">già in pagina</span></summary><div>' +
+    '<p style="font-size:12.5px;color:var(--ink-700);margin:0 0 8px">Non serve farci niente: la chiave della finestra di scelta file è scritta ' +
+    'nell\'app e vale per tutti. Questo riquadro serve solo se un giorno va sostituita. Si crea in ' +
+    '<code>console.cloud.google.com</code> col tuo account:</p>' +
     '<ol style="font-size:12.5px;color:var(--ink-700);line-height:1.7;padding-left:20px;margin:0 0 10px">' +
     '<li><b>API e servizi → Libreria</b>: attiva <b>Google Picker API</b>.</li>' +
     '<li><b>API e servizi → Credenziali → Crea credenziali → Chiave API</b>.</li>' +
@@ -3822,7 +3864,12 @@ document.addEventListener('click', function (ev) {
     S.ddt = S.ddt.filter(function (x) { return x.id !== id; });
     persist(); rDdt(); rBadge(); return;
   }
-  if (t.id === 'gdChip' || (t.closest && t.closest('#gdChip'))) { vai('dati'); return; }
+  if (t.id === 'gdChip' || (t.closest && t.closest('#gdChip'))) {
+    if (!gd.token) gdEntra(); else vai('dati');
+    return;
+  }
+  if (t.id === 'bGdBanner') { gdEntra(); return; }
+  if (t.id === 'bGdBannerFile') { gdScegli(); return; }
   if (t.id === 'bGdEntra') { gdEntra(); return; }
   if (t.id === 'bGdTira') { gdTira(true); return; }
   if (t.id === 'bGdSpingi') { gdSpingi(true); return; }
