@@ -146,6 +146,7 @@ input.ed:focus,select.ed:focus,textarea.ed:focus{outline:none;border-color:var(-
 input.ed.w5{width:76px} input.ed.w7{width:96px} input.ed.w3{width:58px}
 select.ed{background:#fcfdff;cursor:pointer}
 input.ed.man{border-color:var(--em-600);background:var(--em-50)}
+input.ed.pbad{border-color:var(--am-600);background:var(--am-50)}
 
 /* ---------- pastiglie ---------- */
 .p{display:inline-flex;align-items:center;gap:4px;padding:1.5px 8px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
@@ -220,12 +221,13 @@ input.ed.man{border-color:var(--em-600);background:var(--em-50)}
 .sp{height:4px}
 .rowform{display:grid;grid-template-columns:118px 1.5fr 1.4fr 1.7fr 86px 62px 1.2fr auto;gap:8px;align-items:end}
 .rowform.r7{grid-template-columns:118px 1.6fr 118px 90px 70px 1.1fr auto}
+.rowform.rdot{grid-template-columns:1.5fr 118px 1.5fr 1.9fr 1.2fr}
 .rowform .f{display:flex;flex-direction:column;gap:3px}
 .rowform .f label{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-500)}
 .rowform input,.rowform select{font:inherit;font-size:12.5px;padding:6px 8px;border:1px solid var(--ink-300);border-radius:var(--r-s);background:#fcfdff;width:100%}
 .rowform input:focus,.rowform select:focus{outline:none;border-color:var(--em-600);box-shadow:0 0 0 3px var(--em-100)}
-@media(max-width:1320px){.rowform{grid-template-columns:repeat(4,1fr)}}
-@media(max-width:820px){.rowform{grid-template-columns:1fr 1fr}}
+@media(max-width:1320px){.rowform,.rowform.rdot{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:820px){.rowform,.rowform.rdot{grid-template-columns:1fr 1fr}}
 .toast{
   position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:90;
   background:var(--ink-900);color:#fff;padding:10px 18px;border-radius:22px;font-size:12.5px;font-weight:500;
@@ -432,7 +434,7 @@ tr.riga-no td{opacity:.5}
   <!-- ====================== 03 MOVIMENTI E FURGONI ====================== -->
   <section class="sec" id="sec-mov">
     <h2 class="sec-h">Movimenti e furgoni</h2>
-    <p class="sec-d">Carichi, consegne ai furgoni, rientri e scarichi. La giacenza di magazzino è l'ultimo inventario più i movimenti registrati dopo quella data; quello che consegni a un furgone esce dal magazzino ma resta tuo, e lo ritrovi sul mezzo finché non viene usato o rientra.</p>
+    <p class="sec-d">Carichi, consegne ai furgoni, rientri e scarichi. La giacenza di magazzino è l'ultimo inventario più i movimenti registrati dopo quella data; quello che consegni a un furgone esce dal magazzino ma resta tuo, e lo ritrovi sul mezzo finché non viene usato o rientra. La merce che era già a bordo prima dell'inventario si registra come <b>dotazione</b>: compare sul furgone e lascia la giacenza di magazzino come sta.</p>
 
     <div class="card"><h3>I furgoni<span class="hint">premi un furgone per vedere che cosa ha a bordo</span></h3><div class="bd">
       <div class="fgrid" id="furgCard"></div>
@@ -440,11 +442,47 @@ tr.riga-no td{opacity:.5}
     <div class="card" id="furgDett" style="display:none"><h3 id="furgDettT">A bordo</h3>
       <div class="bd flush"><div class="tw" id="furgDettB"></div></div></div>
 
+    <div class="card" id="dotCard"><h3>Carica un furgone<span class="hint">più articoli in una volta; la dotazione già a bordo non tocca la giacenza di magazzino</span></h3>
+      <div class="bd">
+        <div class="rowform rdot">
+          <div class="f"><label>Furgone</label><select id="dtFurg"></select></div>
+          <div class="f"><label>Data</label><input type="date" id="dtData"></div>
+          <div class="f"><label>Le quantità che scrivo</label><select id="dtModo">
+            <option value="add">si aggiungono a quello che c'è</option>
+            <option value="set">sono il totale a bordo</option>
+          </select></div>
+          <div class="f"><label>La merce</label><select id="dtProv">
+            <option value="dotazione">era già a bordo — il magazzino non cambia</option>
+            <option value="consegna">la prendo adesso dal magazzino</option>
+          </select></div>
+          <div class="f"><label>Riferimento</label><input type="text" id="dtRif" placeholder="es. ricognizione furgoni"></div>
+        </div>
+        <div class="sp"></div>
+        <div class="bar" style="margin-bottom:0">
+          <input type="search" id="qDot" placeholder="Cerca l'articolo…">
+          <select id="fDotCat"><option value="">Tutte le categorie</option></select>
+          <label><input type="checkbox" id="fDotScritti"> solo le righe che ho compilato</label>
+          <div class="gap"></div>
+          <span class="ago" id="dotCount"></span>
+        </div>
+      </div>
+      <div class="bd flush"><div class="tw tall" id="dotT"></div></div>
+      <div class="bd" style="border-top:1px solid var(--ink-200)">
+        <div class="bar" style="margin-bottom:0">
+          <span id="dotEsito" style="font-size:12px;color:var(--ink-600)"></span>
+          <div class="gap"></div>
+          <button class="b" id="bDotVuota">Svuota le caselle</button>
+          <button class="b pri" id="bDotSalva">Registra sul furgone</button>
+        </div>
+      </div>
+    </div>
+
     <div class="card"><h3>Registra un movimento</h3><div class="bd">
       <div class="rowform">
         <div class="f"><label>Data</label><input type="date" id="mvData"></div>
         <div class="f"><label>Tipo</label><select id="mvTipo">
           <option value="carico">Carico — arriva merce</option>
+          <option value="dotazione">Dotazione — merce già a bordo</option>
           <option value="consegna">Consegna a un furgone</option>
           <option value="rientro">Rientro da un furgone</option>
           <option value="scarico">Scarico — usato sul posto</option>
@@ -463,7 +501,7 @@ tr.riga-no td{opacity:.5}
 
     <div class="bar">
       <input type="search" id="qMov" placeholder="Cerca per articolo, furgone o riferimento…">
-      <select id="fMvTipo"><option value="">Tutti i tipi</option><option value="carico">Carichi</option><option value="consegna">Consegne ai furgoni</option><option value="rientro">Rientri</option><option value="scarico">Scarichi</option><option value="rettifica">Rettifiche</option></select>
+      <select id="fMvTipo"><option value="">Tutti i tipi</option><option value="carico">Carichi</option><option value="dotazione">Dotazioni a bordo</option><option value="consegna">Consegne ai furgoni</option><option value="rientro">Rientri</option><option value="scarico">Scarichi</option><option value="rettifica">Rettifiche</option></select>
       <select id="fMvFurg"><option value="">Tutti i luoghi</option></select>
       <div class="gap"></div>
       <span class="ago" id="movCount"></span>
@@ -1407,6 +1445,8 @@ function qMov(m) { return Number(m.qta) || 0; }
 /* effetto sul magazzino */
 function effMag(m) {
   var q = qMov(m), l = m.luogo || '';
+  /* la dotazione descrive merce che era già sul furgone: il magazzino non c'entra */
+  if (m.tipo === 'dotazione') return 0;
   if (m.tipo === 'carico') return l ? 0 : q;
   if (m.tipo === 'consegna') return -q;
   if (m.tipo === 'rientro') return q;
@@ -1417,6 +1457,7 @@ function effMag(m) {
 function effFurg(m, fid) {
   if ((m.luogo || '') !== fid) return 0;
   var q = qMov(m);
+  if (m.tipo === 'dotazione') return q;      /* può essere negativa: corregge una conta in eccesso */
   if (m.tipo === 'consegna' || m.tipo === 'carico') return q;
   if (m.tipo === 'rientro' || m.tipo === 'scarico') return -q;
   return q;
@@ -1445,6 +1486,7 @@ function suiFurgoni(a) {
 function luogoTxt(m) {
   var l = m.luogo || '';
   var nomeF = l ? furgNome(l) : 'Magazzino';
+  if (m.tipo === 'dotazione') return '<span class="p bl">già a bordo</span> → <span class="p furg">' + esc(nomeF) + '</span>';
   if (m.tipo === 'carico') return '<span class="p mag">fornitore</span> → <span class="p ' + (l ? 'furg' : 'ok') + '">' + esc(nomeF) + '</span>';
   if (m.tipo === 'consegna') return '<span class="p mag">Magazzino</span> → <span class="p furg">' + esc(nomeF) + '</span>';
   if (m.tipo === 'rientro') return '<span class="p furg">' + esc(nomeF) + '</span> → <span class="p ok">Magazzino</span>';
@@ -1452,7 +1494,7 @@ function luogoTxt(m) {
   return '<span class="p ' + (l ? 'furg' : 'mag') + '">' + esc(nomeF) + '</span>';
 }
 /* i movimenti che spostano merce fra due posti non sono né carico né consumo */
-function interno(m) { return m.tipo === 'consegna' || m.tipo === 'rientro'; }
+function interno(m) { return m.tipo === 'consegna' || m.tipo === 'rientro' || m.tipo === 'dotazione'; }
 
 var furgSel = null;
 function rMov() {
@@ -1482,7 +1524,7 @@ function rMov() {
     el('furgDettT').innerHTML = 'A bordo di ' + esc(f2.dip) + ' · ' + esc(f2.targa) +
       '<span class="hint">' + esc(f2.az) + '</span>';
     if (!ids.length) {
-      el('furgDettB').innerHTML = '<div class="vuoto">Questo furgone non ha niente a bordo. Usa «Consegna a un furgone» qui sotto per caricarlo.</div>';
+      el('furgDettB').innerHTML = '<div class="vuoto">Questo furgone non ha niente a bordo. Con «Carica un furgone» qui sotto puoi registrare in una volta sia la merce che c\'è già (senza toccare il magazzino) sia quella che gli dai adesso.</div>';
     } else {
       ids.sort(function (x, y) { return q2[y] - q2[x]; });
       var h = '<table class="t"><thead><tr><th>Articolo</th><th class="n">A bordo</th>' +
@@ -1513,6 +1555,7 @@ function rMov() {
   if (prev) sel.value = prev;
   if (!el('mvData').value) el('mvData').value = oggi();
   aggiornaLuogo();
+  rDot();
 
   var ff = el('fMvFurg');
   if (ff.options.length <= 1) {
@@ -1545,7 +1588,7 @@ function rMov() {
     h2 += '<tr><td class="mono">' + dataIt(m.data) + '</td>' +
       '<td class="voce">' + esc(a ? a.voce : '(articolo eliminato)') + '</td>' +
       '<td class="c"><span class="p ' + (m.tipo === 'carico' ? 'ok' : m.tipo === 'scarico' ? 'sotto' :
-        m.tipo === 'consegna' ? 'furg' : m.tipo === 'rientro' ? 'bl' : 'no') + '">' + m.tipo + '</span></td>' +
+        m.tipo === 'consegna' ? 'furg' : m.tipo === 'rientro' ? 'bl' : m.tipo === 'dotazione' ? 'bl' : 'no') + '">' + m.tipo + '</span></td>' +
       '<td>' + luogoTxt(m) + '</td>' +
       '<td class="n mono">' + nf(qMov(m), 2) + ' ' + esc(a ? a.um : '') + '</td>' +
       '<td class="n mono" style="font-weight:600;color:' + (e < 0 ? 'var(--ro-700)' : e > 0 ? 'var(--em-700)' : 'var(--ink-400)') + '">' +
@@ -1559,8 +1602,9 @@ function rMov() {
 /* le opzioni del luogo cambiano col tipo di movimento */
 function aggiornaLuogo() {
   var t = el('mvTipo').value, sel = el('mvLuogo'), prev = sel.value;
-  var soloFurg = (t === 'consegna' || t === 'rientro');
-  el('mvLuogoL').textContent = t === 'consegna' ? 'A quale furgone' : (t === 'rientro' ? 'Da quale furgone' : 'Dove');
+  var soloFurg = (t === 'consegna' || t === 'rientro' || t === 'dotazione');
+  el('mvLuogoL').textContent = t === 'consegna' ? 'A quale furgone' :
+    (t === 'rientro' ? 'Da quale furgone' : (t === 'dotazione' ? 'Su quale furgone' : 'Dove'));
   var o = soloFurg ? '<option value="">— scegli il furgone —</option>' : '<option value="">Magazzino</option>';
   o += S.furgoni.map(function (f) {
     return '<option value="' + f.id + '">' + esc(f.dip + ' · ' + f.targa + ' · ' + f.az) + '</option>';
@@ -3795,6 +3839,8 @@ document.addEventListener('change', function (ev) {
     persist(); return;
   }
   if (t.id === 'fMvFurg') { rMov(); return; }
+  if (t.id === 'fDotCat' || t.id === 'fDotScritti' || t.id === 'dtModo' || t.id === 'dtProv') { rDot(); return; }
+  if (t.id === 'dtFurg') { furgSel = t.value || null; rMov(); return; }
   if (t.id === 'fLis') { rListino(); return; }
   if (t.id === 'fVend') { rVend(); return; }
 });
@@ -3846,6 +3892,7 @@ document.addEventListener('click', function (ev) {
   if (fc) {
     var fid = fc.getAttribute('data-furg');
     furgSel = (furgSel === fid) ? null : fid;
+    el('dtFurg').value = furgSel || '';     /* il modulo di carico segue la scheda scelta */
     rMov();
     if (furgSel) el('furgDett').scrollIntoView({block: 'nearest'});
     return;
@@ -3945,8 +3992,8 @@ el('bMvAdd').onclick = function () {
   var err = function (t) { el('mvEsito').innerHTML = '<span style="color:var(--ro-700)">' + t + '</span>'; };
   if (!a) return err('Scegli l\'articolo.');
   if (!q || isNaN(q)) return err('Metti una quantità.');
-  if (tipo !== 'rettifica' && q <= 0) return err('La quantità deve essere maggiore di zero.');
-  if ((tipo === 'consegna' || tipo === 'rientro') && !luogo) return err('Scegli il furgone.');
+  if (tipo !== 'rettifica' && tipo !== 'dotazione' && q <= 0) return err('La quantità deve essere maggiore di zero.');
+  if ((tipo === 'consegna' || tipo === 'rientro' || tipo === 'dotazione') && !luogo) return err('Scegli il furgone.');
   if (tipo === 'consegna') {
     var disp = giac(a);
     if (disp !== null && q > disp) return err('In magazzino ci sono ' + nf(disp, 2) + ' ' + esc(a.um) +
@@ -3968,6 +4015,209 @@ el('bMvAdd').onclick = function () {
   aggiorna();
 };
 el('mvTipo').addEventListener('change', aggiornaLuogo);
+
+/* ====================== CARICA UN FURGONE (più articoli) ======================
+   Nei furgoni c'è merce che l'inventario di magazzino non ha mai contato: non è
+   uscita dal magazzino, è semplicemente lì. Il tipo «dotazione» serve a questo —
+   muove il furgone e lascia la giacenza di magazzino esattamente come sta.
+   Chi invece sta caricando adesso, prendendo la roba dagli scaffali, sceglie
+   «la prendo dal magazzino» e l'app registra consegne (o rientri, se la
+   quantità scende).                                                           */
+
+var dotQ = {};        /* id articolo -> testo scritto nella casella, non ancora registrato */
+
+function dotNum(v) {
+  var s = String(v === null || v === undefined ? '' : v).replace(',', '.').trim();
+  if (s === '') return null;
+  var n = parseFloat(s);
+  return isNaN(n) ? null : n;
+}
+function dotFurgSel() { var e = el('dtFurg'); return e ? e.value : ''; }
+
+/* quel che diventerebbe una riga, con la stessa aritmetica in tabella e al salvataggio */
+function dotRiga(a) {
+  var fid = dotFurgSel(), modo = el('dtModo').value, prov = el('dtProv').value;
+  var ab = fid ? giacFurg(a, fid) : 0;
+  var n = dotNum(dotQ[a.id]);
+  var d = n === null ? null : (modo === 'set' ? n - ab : n);
+  var gm = giac(a), pb = '';
+  if (d !== null) {
+    if (ab + d < -1e-9) pb = 'il furgone andrebbe sotto zero';
+    else if (prov === 'consegna' && d > 1e-9 && gm !== null && d > gm + 1e-9)
+      pb = 'in magazzino ce ne sono ' + nf(gm, 2);
+  }
+  return {a: a, scritto: n, ab: ab, d: d, gm: gm, pb: pb,
+    bordo: n === null ? null : ab + d,
+    mag: (d === null || prov === 'dotazione' || gm === null) ? null : gm - d};
+}
+function dotPiano() {
+  var out = [];
+  S.art.forEach(function (a) {
+    if (dotNum(dotQ[a.id]) === null) return;
+    out.push(dotRiga(a));
+  });
+  return out;
+}
+
+function dotCellaBordo(r) {
+  if (r.bordo === null) return '<span class="dim">' + nf(r.ab, 2) + '</span>';
+  var col = Math.abs(r.d) < 1e-9 ? 'var(--ink-400)' : (r.d > 0 ? 'var(--em-700)' : 'var(--ro-700)');
+  return '<b style="color:' + col + '">' + nf(r.bordo, 2) + '</b>' +
+    (Math.abs(r.d) < 1e-9 ? '' : ' <span class="sub" style="color:' + col + '">(' +
+      (r.d > 0 ? '+' : '') + nf(r.d, 2) + ')</span>');
+}
+function dotCellaMag(r) {
+  if (r.gm === null) return '<span class="dim">—</span>';
+  if (r.mag === null) return '<span class="dim">' + nf(r.gm, 2) + '</span>';
+  return '<b>' + nf(r.mag, 2) + '</b> <span class="sub" style="color:var(--ro-700)">(−' + nf(r.d, 2) + ')</span>';
+}
+function dotCellaPb(r) {
+  return r.pb ? '<span class="p sotto">' + esc(r.pb) + '</span>' : '';
+}
+
+function dotConta() {
+  var p = dotPiano(), fid = dotFurgSel();
+  var utili = p.filter(function (r) { return Math.abs(r.d) > 1e-9; });
+  var bad = p.filter(function (r) { return r.pb; }).length;
+  var pezzi = 0;
+  utili.forEach(function (r) { pezzi += r.d; });
+  var t = !p.length ? 'nessuna quantità scritta'
+    : plur(p.length, 'riga compilata', 'righe compilate') +
+      (utili.length === p.length ? '' : ' · ' + plur(p.length - utili.length, 'già a posto', 'già a posto')) +
+      (utili.length ? ' · ' + (pezzi > 0 ? '+' : '') + nf(pezzi, 2) + ' pezzi' +
+        (fid ? ' su ' + furgNome(fid) : '') : '') +
+      (bad ? ' · ' + plur(bad, 'riga da sistemare', 'righe da sistemare') : '');
+  el('dotCount').innerHTML = bad ? '<span style="color:var(--am-700)">' + esc(t) + '</span>' : esc(t);
+}
+
+/* aggiorna la riga sotto le dita senza ridisegnare la tabella, per non perdere il fuoco */
+function dotTocca(inp) {
+  var a = art(inp.getAttribute('data-dotq'));
+  if (!a) return;
+  var tr = inp.closest ? inp.closest('tr') : null;
+  if (!tr) return;
+  var r = dotRiga(a);
+  var c1 = tr.querySelector('[data-dotb]'), c2 = tr.querySelector('[data-dotm]'), c3 = tr.querySelector('[data-dotp]');
+  if (c1) c1.innerHTML = dotCellaBordo(r);
+  if (c2) c2.innerHTML = dotCellaMag(r);
+  if (c3) c3.innerHTML = dotCellaPb(r);
+  inp.className = 'ed n w5' + (r.scritto !== null ? (r.pb ? ' pbad' : ' man') : '');
+  dotConta();
+}
+
+function rDot() {
+  /* --- il furgone, la data, le categorie --- */
+  var fs = el('dtFurg');
+  if (fs.getAttribute('data-n') !== String(S.furgoni.length)) {
+    fs.innerHTML = '<option value="">— scegli il furgone —</option>' +
+      S.furgoni.map(function (f) {
+        return '<option value="' + f.id + '">' + esc(f.dip + ' · ' + f.targa + ' · ' + f.az) + '</option>';
+      }).join('');
+    fs.setAttribute('data-n', String(S.furgoni.length));
+  }
+  if (!fs.value && furgSel && fs.querySelector('[value="' + furgSel + '"]')) fs.value = furgSel;
+  if (!el('dtData').value) el('dtData').value = oggi();
+  var cs = el('fDotCat');
+  if (cs.options.length <= 1) {
+    var cats = {}; S.art.forEach(function (a) { cats[a.cat] = 1; });
+    Object.keys(cats).sort().forEach(function (c) {
+      var o = document.createElement('option'); o.value = c; o.textContent = c; cs.appendChild(o);
+    });
+  }
+
+  var prov = el('dtProv').value, modo = el('dtModo').value, fid = fs.value;
+  el('dtRif').placeholder = prov === 'dotazione' ? 'es. ricognizione furgoni' : 'es. carico del mattino';
+
+  /* --- l'elenco --- */
+  var q = norm(el('qDot').value), cat = cs.value, solo = el('fDotScritti').checked;
+  var lista = S.art.filter(function (a) {
+    if (cat && a.cat !== cat) return false;
+    if (solo && dotNum(dotQ[a.id]) === null) return false;
+    if (q && norm(a.voce + ' ' + a.cat + ' ' + (a.forn || '')).indexOf(q) < 0) return false;
+    return true;
+  }).sort(function (x, y) { return norm(x.voce) < norm(y.voce) ? -1 : 1; });
+
+  if (!fid) {
+    el('dotT').innerHTML = '<div class="vuoto">Scegli prima il furgone: le quantità si riferiscono a quel mezzo.</div>';
+    dotConta();
+    return;
+  }
+  if (!lista.length) {
+    el('dotT').innerHTML = '<div class="vuoto">Nessun articolo con questi filtri.</div>';
+    dotConta();
+    return;
+  }
+
+  var h = '<table class="t"><thead><tr><th>Articolo</th><th>Categoria</th>' +
+    '<th class="n">A bordo ora</th>' +
+    '<th class="n">' + (modo === 'set' ? 'Quanti ce ne sono' : 'Quanti ne aggiungo') + '<span class="mod">scrivibile</span></th>' +
+    '<th class="n">Diventa a bordo</th>' +
+    '<th class="n">' + (prov === 'dotazione' ? 'In magazzino' : 'Magazzino dopo') + '</th>' +
+    '<th></th></tr></thead><tbody>';
+  lista.forEach(function (a) {
+    var r = dotRiga(a);
+    h += '<tr><td class="voce">' + esc(a.voce) + '</td>' +
+      '<td class="dim">' + esc(a.cat) + '</td>' +
+      '<td class="n mono dim">' + nf(r.ab, 2) + ' ' + esc(a.um) + '</td>' +
+      '<td class="n"><input class="ed n w5' + (r.scritto !== null ? (r.pb ? ' pbad' : ' man') : '') +
+        '" data-dotq="' + a.id + '" data-k="dot-' + a.id + '" value="' +
+        esc(dotQ[a.id] === undefined ? '' : String(dotQ[a.id])) + '" placeholder="—"></td>' +
+      '<td class="n mono" data-dotb>' + dotCellaBordo(r) + '</td>' +
+      '<td class="n mono" data-dotm>' + dotCellaMag(r) + '</td>' +
+      '<td data-dotp>' + dotCellaPb(r) + '</td></tr>';
+  });
+  h += '</tbody></table>';
+  el('dotT').innerHTML = h;
+  dotConta();
+}
+
+/* --- i comandi --- */
+el('bDotVuota').onclick = function () {
+  dotQ = {};
+  el('dotEsito').textContent = '';
+  rDot();
+};
+el('bDotSalva').onclick = function () {
+  var fid = dotFurgSel(), prov = el('dtProv').value;
+  var data = el('dtData').value || oggi(), rif = el('dtRif').value.trim();
+  var err = function (t) { el('dotEsito').innerHTML = '<span style="color:var(--ro-700)">' + t + '</span>'; };
+  if (!fid || !furg(fid)) return err('Scegli il furgone.');
+  var p = dotPiano();
+  if (!p.length) return err('Non hai scritto nessuna quantità.');
+  var utili = p.filter(function (r) { return Math.abs(r.d) > 1e-9; });
+  if (!utili.length) return err('Le quantità scritte sono già quelle a bordo: non c\'è niente da registrare.');
+  /* o passa tutto o non si registra niente: mezzo carico sarebbe peggio di nessun carico */
+  var bad = p.filter(function (r) { return r.pb; });
+  if (bad.length) return err('Non ho registrato niente — ' + plur(bad.length, 'riga da sistemare', 'righe da sistemare') +
+    ': ' + bad.slice(0, 3).map(function (r) { return esc(r.a.voce) + ' (' + esc(r.pb) + ')'; }).join(' · ') +
+    (bad.length > 3 ? ' …' : ''));
+
+  var pezzi = 0;
+  utili.forEach(function (r) {
+    var tipo = prov === 'dotazione' ? 'dotazione' : (r.d > 0 ? 'consegna' : 'rientro');
+    var qta = prov === 'dotazione' ? r.d : Math.abs(r.d);
+    aggiungiMov(tipo, r.a.id, qta, fid,
+      rif || (prov === 'dotazione' ? 'dotazione già a bordo' : 'carico furgone'), '', data);
+    pezzi += r.d;
+  });
+  dotQ = {};
+  persist();
+  el('dotEsito').innerHTML = '<b>' + plur(utili.length, 'articolo registrato', 'articoli registrati') +
+    '</b> su <b>' + esc(furgNome(fid)) + '</b> · ' + (pezzi > 0 ? '+' : '') + nf(pezzi, 2) + ' pezzi a bordo · ' +
+    (prov === 'dotazione' ? 'giacenza di magazzino invariata' : 'scaricati dal magazzino');
+  toast(plur(utili.length, 'articolo caricato', 'articoli caricati') + ' su ' + furgNome(fid));
+  aggiorna();
+};
+document.addEventListener('input', function (ev) {
+  var t = ev.target;
+  if (!t || !t.getAttribute) return;
+  var id = t.getAttribute('data-dotq');
+  if (!id) return;
+  if (String(t.value).trim() === '') delete dotQ[id]; else dotQ[id] = t.value;
+  dotTocca(t);
+});
+el('qDot').addEventListener('input', function () { cerca(rDot); });
+
 /* quanto c'è su ciascun furgone, per il suggerimento della colonna */
 function dettFurg(a) {
   var g = giacFurgTutte(), p = [];
@@ -4101,6 +4351,8 @@ window.FM = {S: function () { return S; }, giac: giac, stato: stato, consumo: co
   miglioreAcquisto: miglioreAcquisto,
   giacFurg: giacFurg, suiFurgoni: suiFurgoni, giacFurgTutte: giacFurgTutte,
   aggiungiMov: aggiungiMov, effMag: effMag, leggiDdt: leggiDdt, abbinaRiga: abbinaRiga,
+  effFurg: effFurg, dotRiga: dotRiga, dotPiano: dotPiano, rDot: rDot,
+  dotQ: function (v) { if (v !== undefined) { dotQ = v; rDot(); } return dotQ; },
   ddtApplica: ddtApplica, ddtAggiungi: ddtAggiungi, ddtAnteriore: ddtAnteriore,
   furgSel: function (v) { if (v !== undefined) { furgSel = v; rMov(); } return furgSel; },
   GD: GD, gd: function () { return gd; }, gdUnisci: gdUnisci, gdUnisciLista: gdUnisciLista,
