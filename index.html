@@ -219,9 +219,12 @@ input.ed.pbad{border-color:var(--am-600);background:var(--am-50)}
 @media(max-width:1100px){.g2{grid-template-columns:1fr}}
 .vuoto{padding:26px;text-align:center;color:var(--ink-500);font-size:12.5px}
 .sp{height:4px}
-.rowform{display:grid;grid-template-columns:112px 1.35fr 1.25fr 1.2fr 1.5fr 80px 58px 1.05fr auto;gap:8px;align-items:end}
+.rowform{display:grid;grid-template-columns:104px 1.2fr 1.1fr 1.05fr 1.3fr .9fr 74px 54px .95fr auto;gap:7px;align-items:end}
 .rowform.r7{grid-template-columns:118px 1.6fr 118px 90px 70px 1.1fr auto}
 .rowform.rdot{grid-template-columns:1.4fr 112px 1.35fr 1.7fr 1.15fr 1.1fr}
+.rowform.rcons{grid-template-columns:repeat(8,1fr)}
+tr.spento{opacity:.45}
+tr.spento .voce{text-decoration:line-through}
 .rowform .f{display:flex;flex-direction:column;gap:3px}
 .rowform .f label{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-500)}
 .rowform input,.rowform select{font:inherit;font-size:12.5px;padding:6px 8px;border:1px solid var(--ink-300);border-radius:var(--r-s);background:#fcfdff;width:100%}
@@ -389,17 +392,18 @@ tr.riga-no td{opacity:.5}
     <a data-sec="gia"><span class="num">02</span>Giacenze<span class="bg" id="nvGia">0</span></a>
     <a data-sec="mov"><span class="num">03</span>Movimenti e furgoni<span class="bg" id="nvMov">0</span></a>
     <a data-sec="ddt"><span class="num">04</span>DDT e carichi<span class="bg" id="nvDdt">0</span></a>
-    <a data-sec="az"><span class="num">05</span>Conto fra le aziende<span class="bg" id="nvAz">0</span></a>
-    <a data-sec="inv"><span class="num">06</span>Inventari<span class="bg" id="nvInv">0</span></a>
-    <a data-sec="and"><span class="num">07</span>Andamento consumi<span class="bg" id="nvAnd">0</span></a>
+    <a data-sec="cons"><span class="num">05</span>Consumi settimanali<span class="bg" id="nvCons">0</span></a>
+    <a data-sec="az"><span class="num">06</span>Conto fra le aziende<span class="bg" id="nvAz">0</span></a>
+    <a data-sec="inv"><span class="num">07</span>Inventari<span class="bg" id="nvInv">0</span></a>
+    <a data-sec="and"><span class="num">08</span>Andamento consumi<span class="bg" id="nvAnd">0</span></a>
     <div class="ff-nav-t">Vendite</div>
-    <a data-sec="lis"><span class="num">08</span>Listino<span class="bg" id="nvLis">0</span></a>
-    <a data-sec="vend"><span class="num">09</span>Andamento vendite<span class="bg" id="nvVend">0</span></a>
+    <a data-sec="lis"><span class="num">09</span>Listino<span class="bg" id="nvLis">0</span></a>
+    <a data-sec="vend"><span class="num">10</span>Andamento vendite<span class="bg" id="nvVend">0</span></a>
     <div class="ff-nav-t">Acquisti</div>
-    <a data-sec="forn"><span class="num">10</span>Confronto fornitori<span class="bg" id="nvForn">0</span></a>
-    <a data-sec="ord"><span class="num">11</span>Ordine da fare<span class="bg" id="nvOrd">0</span></a>
+    <a data-sec="forn"><span class="num">11</span>Confronto fornitori<span class="bg" id="nvForn">0</span></a>
+    <a data-sec="ord"><span class="num">12</span>Ordine da fare<span class="bg" id="nvOrd">0</span></a>
     <div class="ff-nav-t">Dati</div>
-    <a data-sec="dati"><span class="num">12</span>Archivio e dati</a>
+    <a data-sec="dati"><span class="num">13</span>Archivio e dati</a>
   </nav>
 
   <main class="ff-pane" id="ffPane">
@@ -500,6 +504,7 @@ tr.riga-no td{opacity:.5}
         </select></div>
         <div class="f"><label id="mvLuogoL">Dove</label><select id="mvLuogo"></select></div>
         <div class="f"><label>Azienda</label><select id="mvAz"></select></div>
+        <div class="f"><label>Tecnico</label><input type="text" id="mvTec" list="tecList" placeholder="facoltativo"></div>
         <div class="f"><label>Articolo</label><select id="mvArt"></select></div>
         <div class="f"><label>Quantità</label><input type="number" id="mvQta" step="any"></div>
         <div class="f"><label>UM</label><input type="text" id="mvUm" readonly style="background:var(--ink-100);color:var(--ink-600)"></div>
@@ -537,7 +542,46 @@ tr.riga-no td{opacity:.5}
     <div id="ddtLista"></div>
   </section>
 
-  <!-- ====================== 05 CONTO FRA LE AZIENDE ====================== -->
+  <!-- ====================== 05 CONSUMI SETTIMANALI ====================== -->
+  <section class="sec" id="sec-cons">
+    <h2 class="sec-h">Consumi settimanali</h2>
+    <p class="sec-d">Il furgone dice da dove esce la merce, non per chi viene usata: i mezzi NSA fanno servizi anche per Sanitech e viceversa. Per chi è stato il consumo lo sa solo l'elenco che carichi tu. Qui lo leggo — azienda per azienda e tecnico per tecnico — ti faccio vedere cosa ho capito, e registro gli scarichi solo quando dici di sì.</p>
+
+    <div id="consSosp" style="display:none"><div id="consSospB"></div></div>
+
+    <div class="card"><h3>Carica l'elenco della settimana<span class="hint">Excel o CSV; le colonne le riconosco dai nomi</span></h3>
+      <div class="bd">
+        <div class="drop" id="dropCons">
+          <b>Trascina qui il foglio dei consumi</b><br>
+          <span>oppure premi per sceglierlo · .xlsx, .xls, .csv</span>
+        </div>
+        <div class="sp"></div>
+        <div id="consNota"></div>
+      </div>
+    </div>
+
+    <div class="card" id="consPend" style="display:none"><h3 id="consPendT">Foglio letto</h3>
+      <div class="bd">
+        <div id="consMap"></div>
+        <div class="sp"></div>
+        <div id="consRiass" style="font-size:12px;color:var(--ink-600)"></div>
+      </div>
+      <div class="bd flush"><div class="tw tall" id="consPendB"></div></div>
+      <div class="bd" style="border-top:1px solid var(--ink-200)">
+        <div class="bar" style="margin-bottom:0">
+          <span id="consEsito" style="font-size:12px;color:var(--ink-600)"></span>
+          <div class="gap"></div>
+          <button class="b" id="bConsAnnulla">Lascia perdere</button>
+          <button class="b pri" id="bConsOk">Registra i consumi</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card"><h3>Elenchi già caricati<span class="hint">togliendone uno spariscono anche gli scarichi che ha registrato</span></h3>
+      <div class="bd flush"><div class="tw" id="consStoria"></div></div></div>
+  </section>
+
+  <!-- ====================== 06 CONTO FRA LE AZIENDE ====================== -->
   <section class="sec" id="sec-az">
     <h2 class="sec-h">Conto fra le aziende</h2>
     <p class="sec-d">Il magazzino è uno solo, ma a riempirlo e a svuotarlo sono NSA e Sanitech. Ogni carico porta con sé chi ha comprato e ogni scarico chi ha consumato: la differenza dice quanto ciascuna ha messo e quanto ha preso, e se una sta consumando la merce dell'altra. Le dotazioni dichiarate già a bordo restano fuori dal conto — non sono acquisti — ma le trovi elencate in fondo.</p>
@@ -559,11 +603,14 @@ tr.riga-no td{opacity:.5}
 
     <div class="card"><div class="bd flush"><div class="tw tall" id="azT"></div></div></div>
 
+    <div class="card" id="azTec" style="display:none"><h3>Chi ha consumato, e per chi<span class="hint">in euro ai prezzi di acquisto; la squadra è quella del furgone assegnato</span></h3>
+      <div class="bd flush"><div class="tw" id="azTecB"></div></div></div>
+
     <div class="card" id="azDot" style="display:none"><h3>Dotazioni dichiarate a bordo<span class="hint">fuori dal conto: è merce ritrovata, non comprata</span></h3>
       <div class="bd flush"><div class="tw" id="azDotB"></div></div></div>
   </section>
 
-  <!-- ====================== 06 INVENTARI ====================== -->
+  <!-- ====================== 07 INVENTARI ====================== -->
   <section class="sec" id="sec-inv">
     <h2 class="sec-h">Inventari e consumi</h2>
     <p class="sec-d">Gli inventari già svolti e il consumo che se ne ricava. Il consumo medio salta solo gli intervalli in cui la giacenza è salita: lì un rifornimento nasconde quanto se n'è andato. Un periodo in cui la giacenza non si è mossa vale zero consumato e conta.</p>
@@ -581,7 +628,7 @@ tr.riga-no td{opacity:.5}
   </section>
 
 
-  <!-- ====================== 07 ANDAMENTO ====================== -->
+  <!-- ====================== 08 ANDAMENTO ====================== -->
   <section class="sec" id="sec-and">
     <h2 class="sec-h">Andamento dei consumi</h2>
     <p class="sec-d">Come si è mossa la giacenza di ogni prodotto fra un inventario e l'altro, e quanto se n'è consumato. Gli intervalli non sono tutti lunghi uguali, perciò il consumo è sempre riportato a 30 giorni: così due periodi si possono confrontare.</p>
@@ -621,7 +668,7 @@ tr.riga-no td{opacity:.5}
   </section>
 
 
-  <!-- ====================== 08 LISTINO ====================== -->
+  <!-- ====================== 09 LISTINO ====================== -->
   <section class="sec" id="sec-lis">
     <h2 class="sec-h">Listino merce</h2>
     <p class="sec-d">I prezzi di acquisto e di vendita del tuo listino, collegati agli articoli di magazzino. Dove il prezzo di vendita manca la casella è <b style="color:var(--am-700)">arancione</b>: finché resta vuota quell'articolo non entra nei conti delle vendite.</p>
@@ -647,7 +694,7 @@ tr.riga-no td{opacity:.5}
       <div class="bd flush"><div class="tw" id="lisSenza"></div></div></div>
   </section>
 
-  <!-- ====================== 09 ANDAMENTO VENDITE ====================== -->
+  <!-- ====================== 10 ANDAMENTO VENDITE ====================== -->
   <section class="sec" id="sec-vend">
     <h2 class="sec-h">Andamento delle vendite</h2>
     <p class="sec-d">Quanto rende ogni articolo. Non esiste un registro delle vendite, quindi la quantità venduta è quella <b>uscita dal magazzino</b> fra un inventario e l'altro, valorizzata ai prezzi di listino. Gli articoli compresi nel prezzo del servizio non producono un ricavo a parte: per quelli il conto mostra il costo del materiale che il servizio si assorbe.</p>
@@ -685,7 +732,7 @@ tr.riga-no td{opacity:.5}
       <div class="bd flush"><div class="tw tall" id="vendT"></div></div></div>
   </section>
 
-  <!-- ====================== 10 CONFRONTO FORNITORI ====================== -->
+  <!-- ====================== 11 CONFRONTO FORNITORI ====================== -->
   <section class="sec" id="sec-forn">
     <h2 class="sec-h">Confronto fornitori</h2>
     <p class="sec-d">I prezzi di ORMA e NEWPHARM a confronto, voce per voce, con il prezzo riportato alla stessa unità di misura. Prezzi, quantità e note sono modificabili: i dati di partenza vengono dal tuo documento di confronto.</p>
@@ -704,7 +751,7 @@ tr.riga-no td{opacity:.5}
     </div></div>
   </section>
 
-  <!-- ====================== 11 ORDINE ====================== -->
+  <!-- ====================== 12 ORDINE ====================== -->
   <section class="sec" id="sec-ord">
     <h2 class="sec-h">Ordine da fare</h2>
     <p class="sec-d">Gli articoli sotto scorta con la quantità da ordinare e, dove il confronto fornitori ha un prezzo, il costo stimato con ciascun fornitore e il risparmio che si ottiene scegliendo il più conveniente.</p>
@@ -718,7 +765,7 @@ tr.riga-no td{opacity:.5}
     <div class="card"><h3>Dove conviene comprare<span class="hint">solo le voci con un prezzo da confrontare</span></h3><div class="bd flush"><div class="tw" id="ordRisp"></div></div></div>
   </section>
 
-  <!-- ====================== 12 DATI ====================== -->
+  <!-- ====================== 13 DATI ====================== -->
   <section class="sec" id="sec-dati">
     <h2 class="sec-h">Archivio e dati</h2>
     <p class="sec-d">Accesso Google, caricamento di un nuovo inventario in Excel, esportazioni e copia di sicurezza. Senza accesso i dati restano in questo browser; con l'accesso l'archivio è uno solo, sul Drive di Omar, condiviso fra i tre account autorizzati.</p>
@@ -767,6 +814,7 @@ tr.riga-no td{opacity:.5}
 <div class="toast" id="toast"></div>
 <div class="chtip" id="chTip"></div>
 <input type="file" id="hidFile" style="display:none">
+<datalist id="tecList"></datalist>
 
 <script>
 /* dati iniziali — generati dal file giacenze 04.11.26 e dal confronto fornitori */
@@ -899,7 +947,7 @@ function statoIniziale() {
     ],
     settings: {ordMesi: 2}, diffSrc: SEED_DIFF, confl: SEED_CONFL,
     listino: JSON.parse(JSON.stringify(SEED_LIST)),
-    furgoni: JSON.parse(JSON.stringify(SEED_FURG)), ddt: []
+    furgoni: JSON.parse(JSON.stringify(SEED_FURG)), ddt: [], cons: []
   };
 }
 /* unisce i dati nuovi del programma nei dati già salvati, senza perdere le modifiche a mano */
@@ -917,15 +965,20 @@ function migra(s) {
     SEED_FURG.forEach(function (f) { if (!hf[f.id]) s.furgoni.push(JSON.parse(JSON.stringify(f))); });
   }
   s.ddt = s.ddt || [];
+  s.cons = s.cons || [];
   s.settings.ddtMap = s.settings.ddtMap || {};
+  s.settings.consMap = s.settings.consMap || {};
   /* i movimenti registrati prima che esistesse il conto fra le aziende:
      dove passano da un furgone l'azienda si deduce, altrove resta da dire */
   s.mov.forEach(function (m) {
+    if (m.tec === undefined || m.tec === null) m.tec = '';
     if (m.az !== undefined && m.az !== null) return;
     var f = null;
     if (m.luogo) s.furgoni.forEach(function (x) { if (x.id === m.luogo) f = x; });
-    m.az = f && f.az ? f.az : '';
+    /* su carichi e scarichi il mezzo non fa testo: l'azienda va dichiarata */
+    m.az = (m.tipo !== 'carico' && m.tipo !== 'scarico' && f && f.az) ? f.az : '';
   });
+
   if (!s.listino) s.listino = JSON.parse(JSON.stringify(SEED_LIST));
   else {
     var hl = {};
@@ -1116,7 +1169,7 @@ function miglioreAcquisto(a) {
 }
 
 /* ------------------------------- navigazione ------------------------------- */
-var SEZ = ['pan', 'gia', 'mov', 'ddt', 'az', 'inv', 'and', 'lis', 'vend', 'forn', 'ord', 'dati'];
+var SEZ = ['pan', 'gia', 'mov', 'ddt', 'cons', 'az', 'inv', 'and', 'lis', 'vend', 'forn', 'ord', 'dati'];
 var cur = 'pan', sporche = {};
 function vai(k) {
   if (SEZ.indexOf(k) < 0) return;
@@ -1136,6 +1189,7 @@ function disegna(k) {
   else if (k === 'gia') rGia();
   else if (k === 'mov') rMov();
   else if (k === 'ddt') rDdt();
+  else if (k === 'cons') rCons();
   else if (k === 'az') rAz();
   else if (k === 'inv') rInv();
   else if (k === 'and') rAnd();
@@ -1217,6 +1271,10 @@ function rBadge() {
   S.ddt.forEach(function (d) { d.righe.forEach(function (r) { if (!r.fatto) daFare++; }); });
   el('nvDdt').textContent = daFare;
   el('nvDdt').className = 'bg' + (daFare ? ' al' : '');
+  el('nvCons').textContent = nf(S.cons.length, 0);
+  var sos = azSospetti();
+  if (sos.length) { el('nvCons').textContent = nf(sos.length, 0); el('nvCons').className = 'bg al'; }
+  else el('nvCons').className = 'bg';
   var cz = conto();
   el('nvAz').textContent = nf(cz.tot.nonAttr.n, 0);
   el('nvAz').className = 'bg' + (cz.tot.nonAttr.n ? ' al' : '');
@@ -1520,11 +1578,38 @@ function azNorm(s) {
   return '';
 }
 function azBreve(s) { return String(s || '').replace(/\s*s\.?r\.?l\.?\s*$/i, ''); }
-/* l'azienda di un movimento: quella scritta, o quella del furgone che tocca */
+/* L'azienda di un movimento.
+   Il furgone dice da dove esce la merce, non per chi viene usata: i mezzi NSA
+   fanno servizi per Sanitech e viceversa. Quindi su un carico o uno scarico
+   vale solo l'azienda dichiarata, che arriva dall'elenco dei consumi o dalla
+   bolla. Sui movimenti che riguardano il mezzo in sé — consegne, rientri,
+   dotazioni — il furgone può ancora dirla, perché lì parla di custodia. */
 function azMov(m) {
   if (m.az) return m.az;
+  if (m.tipo === 'carico' || m.tipo === 'scarico') return '';
   var f = m.luogo ? furg(m.luogo) : null;
   return f && f.az ? f.az : '';
+}
+function tecAz(nome) {
+  var n = norm(nome || ''), out = '';
+  S.furgoni.forEach(function (f) { if (!out && norm(f.dip) === n) out = f.az || ''; });
+  return out;
+}
+/* i tecnici: quelli dei furgoni più quelli che compaiono negli elenchi caricati */
+function tecElenco() {
+  var o = {}, out = [];
+  S.furgoni.forEach(function (f) { if (f.dip && !o[norm(f.dip)]) { o[norm(f.dip)] = f.dip; out.push(f.dip); } });
+  S.mov.forEach(function (m) { if (m.tec && !o[norm(m.tec)]) { o[norm(m.tec)] = m.tec; out.push(m.tec); } });
+  return out.sort(function (x, y) { return norm(x) < norm(y) ? -1 : 1; });
+}
+/* un nome scritto a modo suo si riporta su quello già noto: «d. rossi» → «Daniele» no,
+   ma «DANIELE » → «Daniele» sì, e basta per non moltiplicare le voci */
+function tecNorm(s) {
+  var n = norm(s || '');
+  if (!n) return '';
+  var tutti = tecElenco();
+  for (var i = 0; i < tutti.length; i++) if (norm(tutti[i]) === n) return tutti[i];
+  return String(s).trim().replace(/\s+/g, ' ');
 }
 function qMov(m) { return Number(m.qta) || 0; }
 /* effetto sul magazzino */
@@ -1577,6 +1662,15 @@ function luogoTxt(m) {
   if (m.tipo === 'rientro') return '<span class="p furg">' + esc(nomeF) + '</span> → <span class="p ok">Magazzino</span>';
   if (m.tipo === 'scarico') return '<span class="p ' + (l ? 'furg' : 'mag') + '">' + esc(nomeF) + '</span> → <span class="p no">usato</span>';
   return '<span class="p ' + (l ? 'furg' : 'mag') + '">' + esc(nomeF) + '</span>';
+}
+/* scarichi la cui azienda coincide con quella del furgone e non è mai stata scelta a mano:
+   potrebbero venire dalla vecchia regola, quando il mezzo decideva per chi era il consumo */
+function azSospetti() {
+  return S.mov.filter(function (m) {
+    if (m.tipo !== 'scarico' || !m.luogo || !m.az || m.azMano) return false;
+    var f = furg(m.luogo);
+    return !!(f && f.az === m.az);
+  });
 }
 /* solo carichi e scarichi entrano nel conto fra le aziende: lì l'azienda serve */
 function contaAz(m) { return m.tipo === 'carico' || m.tipo === 'scarico'; }
@@ -1646,6 +1740,7 @@ function rMov() {
 
   riempiAz('mvAz');
   riempiAz('fMvAz', 'Tutte le aziende');
+  el('tecList').innerHTML = tecElenco().map(function (t2) { return '<option value="' + esc(t2) + '">'; }).join('');
   var ff = el('fMvFurg');
   if (ff.options.length <= 1) {
     ff.innerHTML = '<option value="">Tutti i luoghi</option><option value="mag">Solo magazzino</option>' +
@@ -1673,6 +1768,7 @@ function rMov() {
   var iv = invAtt(), s0 = iv ? (iv.seq0 || 0) : 0;
   var h2 = '<table class="t"><thead><tr><th>Data</th><th>Articolo</th><th class="c">Tipo</th>' +
     '<th>Da → a</th><th>Azienda<span class="mod">modificabile</span></th>' +
+    '<th>Tecnico<span class="mod">modificabile</span></th>' +
     '<th class="n">Quantità</th><th class="n">Effetto in magazzino</th>' +
     '<th>Riferimento</th><th class="c">Conta</th><th></th></tr></thead><tbody>';
   mv.forEach(function (m) {
@@ -1685,6 +1781,8 @@ function rMov() {
       '<td' + (azMov(m) ? '' : (contaAz(m) ? ' class="manca"' : '')) + '>' +
         '<select class="ed" data-mvaz="' + m.id + '" style="min-width:130px">' + azOpt(m.az || '') + '</select>' +
         (!m.az && azMov(m) ? '<span class="sub">dal furgone: ' + esc(azBreve(azMov(m))) + '</span>' : '') + '</td>' +
+      '<td><input class="ed" data-mvtec="' + m.id + '" list="tecList" value="' + esc(m.tec || '') +
+        '" placeholder="—" style="width:110px"></td>' +
       '<td class="n mono">' + nf(qMov(m), 2) + ' ' + esc(a ? a.um : '') + '</td>' +
       '<td class="n mono" style="font-weight:600;color:' + (e < 0 ? 'var(--ro-700)' : e > 0 ? 'var(--em-700)' : 'var(--ink-400)') + '">' +
         (e === 0 ? '—' : (e > 0 ? '+' : '') + nf(e, 2)) + '</td>' +
@@ -1729,13 +1827,14 @@ function azDalLuogo() {
   var l = el('mvLuogo').value, f = l ? furg(l) : null;
   if (f && f.az) el('mvAz').value = f.az;
 }
-function aggiungiMov(tipo, artId, qta, luogo, rif, nota, data, az) {
+function aggiungiMov(tipo, artId, qta, luogo, rif, nota, data, az, tec) {
   S.seq = (S.seq || 0) + 1;
-  /* se non la dico, l'azienda la mette il furgone */
+  /* il furgone può dire l'azienda solo dei movimenti che riguardano il mezzo */
   var f = luogo ? furg(luogo) : null;
+  var daMezzo = (tipo !== 'carico' && tipo !== 'scarico' && f && f.az) ? f.az : '';
   S.mov.push({id: uid('m'), seq: S.seq, data: data || oggi(), art: artId, tipo: tipo,
     qta: qta, luogo: luogo || '', rif: rif || '', note: nota || '',
-    az: az || (f && f.az ? f.az : '')});
+    az: az || daMezzo, tec: tec || ''});
   tocca();
   return S.mov[S.mov.length - 1];
 }
@@ -3966,11 +4065,46 @@ document.addEventListener('change', function (ev) {
   if (t.id === 'fMvFurg' || t.id === 'fMvAz') { rMov(); return; }
   if (t.id === 'mvLuogo') { azDalLuogo(); return; }
   if ((id = t.getAttribute('data-mvaz'))) {
-    S.mov.forEach(function (m) { if (m.id === id) m.az = t.value; });
+    S.mov.forEach(function (m) { if (m.id === id) { m.az = t.value; m.azMano = 1; } });
+    tocca(); persist(); aggiorna(); return;
+  }
+  if ((id = t.getAttribute('data-mvtec')) !== null && id !== undefined && t.getAttribute('data-mvtec')) {
+    S.mov.forEach(function (m) { if (m.id === id) m.tec = tecNorm(t.value); });
     tocca(); persist(); aggiorna(); return;
   }
   if (t.id === 'fDotCat' || t.id === 'fDotScritti' || t.id === 'dtModo' || t.id === 'dtProv') { rDot(); return; }
   if (t.id === 'azDa') { azDa = t.value; rAz(); return; }
+  if (t.id === 'consData' && pendCons) { pendCons.data = t.value; rCons(); return; }
+  var cc = t.getAttribute('data-conscol');
+  if (cc && pendCons) {
+    pendCons.col[cc] = Number(t.value);
+    pendCons.righe = consRighe(pendCons);
+    rCons(); return;
+  }
+  var ci = t.getAttribute('data-consart');
+  if (ci !== null && ci !== undefined && pendCons) {
+    var rr = pendCons.righe[Number(ci)];
+    if (rr) { rr.art = t.value; rr.fonte = t.value ? 'a mano' : ''; rr.sim = t.value ? 1 : 0; rr.ok = !!t.value; }
+    rCons(); return;
+  }
+  var cz2 = t.getAttribute('data-consaz');
+  if (cz2 !== null && cz2 !== undefined && pendCons) {
+    var r2 = pendCons.righe[Number(cz2)];
+    if (r2) r2.az = t.value;
+    rCons(); return;
+  }
+  var ct = t.getAttribute('data-constec');
+  if (ct !== null && ct !== undefined && pendCons) {
+    var r3 = pendCons.righe[Number(ct)];
+    if (r3) r3.tec = tecNorm(t.value);
+    return;
+  }
+  var co = t.getAttribute('data-consok');
+  if (co !== null && co !== undefined && pendCons) {
+    var r4 = pendCons.righe[Number(co)];
+    if (r4) r4.ok = t.checked;
+    rCons(); return;
+  }
   if (t.id === 'azScomp') { azSoloScomp = t.checked; rAz(); return; }
   if (t.id === 'dtFurg') { furgSel = t.value || null; rMov(); return; }
   if (t.id === 'fLis') { rListino(); return; }
@@ -4020,6 +4154,7 @@ document.addEventListener('click', function (ev) {
     S.listino = S.listino.filter(function (l) { return l.id !== id; });
     persist(); aggiorna(); toast('Riga di listino eliminata'); return;
   }
+  if ((id = t.getAttribute('data-consdel'))) { consElimina(id); return; }
   var azs = t.getAttribute('data-azsrt');
   if (azs !== null && azs !== undefined) {
     if (azArtSort.k === azs) azArtSort.d = -azArtSort.d; else { azArtSort.k = azs; azArtSort.d = azs === 'voce' ? 1 : -1; }
@@ -4145,7 +4280,9 @@ el('bMvAdd').onclick = function () {
   /* un carico o uno scarico senza azienda resterebbe fuori dal conto: meglio dirlo subito */
   if (contaAz({tipo: tipo}) && !el('mvAz').value && !luogo)
     return err('Di\' per quale azienda è questo movimento: senza, resta fuori dal conto fra le aziende.');
-  aggiungiMov(tipo, aid, q, luogo, el('mvRif').value, '', el('mvData').value || oggi(), el('mvAz').value);
+  var mNuovo = aggiungiMov(tipo, aid, q, luogo, el('mvRif').value, '', el('mvData').value || oggi(),
+    el('mvAz').value, tecNorm(el('mvTec').value));
+  if (el('mvAz').value) mNuovo.azMano = 1;
   el('mvQta').value = ''; el('mvRif').value = '';
   persist();
   var ng = giac(a), nb = luogo ? giacFurg(a, luogo) : null;
@@ -4186,7 +4323,7 @@ function conto() {
   var az = azElenco();
   var perArt = {}, tot = {comprato: {}, consumato: {}, dotaz: {}, saldo: {},
     eur: {}, aBordo: {}, eurBordo: {},
-    nonAttr: {comprato: 0, consumato: 0, n: 0}, senzaPrezzo: 0, nMov: 0};
+    nonAttr: {comprato: 0, consumato: 0, n: 0}, senzaPrezzo: 0, nMov: 0, perTec: {}};
   az.forEach(function (z) {
     tot.comprato[z] = 0; tot.consumato[z] = 0; tot.dotaz[z] = 0;
     tot.saldo[z] = 0; tot.eur[z] = 0; tot.aBordo[z] = 0; tot.eurBordo[z] = 0;
@@ -4212,6 +4349,16 @@ function conto() {
       if (z) { r.consumato[z] = (r.consumato[z] || 0) + q; tot.consumato[z] = (tot.consumato[z] || 0) + q; }
       else { r.ns += q; tot.nonAttr.consumato += q; tot.nonAttr.n++; }
       r.attiva = true; tot.nMov++;
+      if (m.tipo === 'scarico' && m.tec) {
+        var a2 = art(m.art), pa2 = a2 ? pAcq(a2) : null;
+        var tt = tot.perTec[m.tec] = tot.perTec[m.tec] || {eur: {}, n: {}, muti: 0};
+        var k2 = z || '(senza azienda)';
+        /* il conteggio va tenuto a parte dagli euro: un articolo senza prezzo vale zero
+           euro ma è comunque lavoro fatto per quell'azienda */
+        tt.eur[k2] = (tt.eur[k2] || 0) + (pa2 === null ? 0 : q * pa2);
+        tt.n[k2] = (tt.n[k2] || 0) + 1;
+        if (pa2 === null) tt.muti++;
+      }
     } else if (m.tipo === 'dotazione') {
       if (z) { r.dotaz[z] = (r.dotaz[z] || 0) + q; tot.dotaz[z] = (tot.dotaz[z] || 0) + q; }
     }
@@ -4488,6 +4635,36 @@ function rAz() {
   h += '</tbody></table>';
   el('azT').innerHTML = h;
 
+  /* --- chi ha consumato, e per chi --- */
+  var tecs = Object.keys(t.perTec).sort(function (x, y) { return norm(x) < norm(y) ? -1 : 1; });
+  if (!tecs.length) el('azTec').style.display = 'none';
+  else {
+    el('azTec').style.display = '';
+    var ht = '<table class="t"><thead><tr><th>Tecnico</th><th>La sua squadra</th>' +
+      az.map(function (z, i) { return '<th class="n azg' + i + '">Consumato per ' + esc(azBreve(z)) + '</th>'; }).join('') +
+      '<th class="n">Senza azienda</th><th>Lavora anche per l\'altra</th></tr></thead><tbody>';
+    tecs.forEach(function (tc) {
+      var r = t.perTec[tc], sua = tecAz(tc), altra = 0;
+      az.forEach(function (z) { if (sua && z !== sua) altra += (r.n[z] || 0); });
+      ht += '<tr><td class="voce">' + esc(tc) +
+        (r.muti ? '<span class="sub">' + plur(r.muti, 'riga senza prezzo di acquisto',
+          'righe senza prezzo di acquisto') + '</span>' : '') + '</td>' +
+        '<td>' + (sua ? '<span class="p ' + (azElenco().indexOf(sua) === 0 ? 'ok' : 'bl') + '">' + esc(azBreve(sua)) + '</span>'
+          : '<span class="dim">non so</span>') + '</td>' +
+        az.map(function (z, i) {
+          var v = r.eur[z] || 0, nn = r.n[z] || 0;
+          /* zero euro su righe vere vuol dire «manca il prezzo», non «niente»: meglio un trattino */
+          return '<td class="n mono azg' + i + (nn ? '' : ' dim') + '">' +
+            (nn ? (v > 0.5 ? eur(v, 0) : '—') + '<span class="sub">' + plur(nn, 'riga', 'righe') + '</span>' : '—') + '</td>';
+        }).join('') +
+        '<td class="n mono' + (r.n['(senza azienda)'] ? ' manca' : ' dim') + '">' +
+          (r.n['(senza azienda)'] ? eur(r.eur['(senza azienda)'] || 0, 0) : '—') + '</td>' +
+        '<td>' + (altra ? '<span class="p bl">sì · ' + plur(altra, 'riga', 'righe') + '</span>'
+            : '<span class="dim">—</span>') + '</td></tr>';
+    });
+    el('azTecB').innerHTML = ht + '</tbody></table>';
+  }
+
   /* --- le dotazioni, che nel conto non entrano --- */
   var dot = [];
   S.art.forEach(function (a) {
@@ -4529,9 +4706,366 @@ function azEsporta() {
   XLSX.writeFile(wb, 'conto_aziende_' + (c.da || 'sempre') + '.xlsx');
 }
 
+/* ====================== 05 CONSUMI SETTIMANALI ======================
+   Il furgone dice da dove esce la merce, non per chi viene usata: i mezzi NSA
+   fanno servizi per Sanitech e viceversa. L'unica cosa che sa davvero per chi
+   è stato il consumo è l'elenco che Omar carica ogni settimana, azienda per
+   azienda e tecnico per tecnico. Questa sezione lo legge.
+
+   Il foglio non ha un formato fisso, quindi le colonne si riconoscono dai
+   nomi e restano cambiabili a mano prima di registrare: meglio chiedere che
+   indovinare male.                                                          */
+
+var CONS_COL = [
+  ['desc',  /descrizione|articolo|prodotto|merce|nome tecnico|formulato|principio|presidio/, 'Articolo'],
+  ['qta',   /quantit|^q ?ta?$|^qt$|^pezzi$|^pz$|^n ?pezzi|consumat|consumo|usat|utilizzat|impiegat|erogat/, 'Quantità'],
+  ['az',    /azienda|societ|ditta|ragione sociale|committente|per conto|intestat/, 'Azienda'],
+  ['tec',   /tecnico|operatore|dipendente|addetto|incaricat|^nome$|^operat/, 'Tecnico'],
+  ['data',  /^data|giorno|settimana|periodo/, 'Data'],
+  ['um',    /^um$|^u\.?m\.?$|unit[àa]|misura/, 'UM'],
+  ['rif',   /nota|^rif|riferiment|cantiere|commessa|intervento|servizio|cliente|luogo/, 'Riferimento']
+];
+
+var pendCons = null;        /* il foglio letto e non ancora registrato */
+
+function consMapKey(d) { return norm(d); }
+
+/* l'articolo di una riga: prima la memoria delle correzioni, poi i nomi */
+function consAbbina(desc) {
+  var mem = S.settings.consMap || {};
+  var k = consMapKey(desc);
+  if (mem[k] && art(mem[k])) return {art: mem[k], sim: 1, fonte: 'memoria'};
+  return abbinaRiga({desc: desc, cod: ''}, '');
+}
+
+/* dal foglio grezzo alle righe, con la mappatura delle colonne che c'è adesso */
+function consRighe(p) {
+  var out = [];
+  for (var r = p.hr + 1; r < p.grezzo.length; r++) {
+    var riga = p.grezzo[r];
+    if (!riga) continue;
+    var desc = p.col.desc >= 0 ? String(riga[p.col.desc] || '').trim().replace(/\s+/g, ' ') : '';
+    if (!desc) continue;
+    if (/^(descrizione|articolo|prodotto|totale|totali)$/i.test(desc)) continue;
+    var pq = p.col.qta >= 0 ? parseQta(riga[p.col.qta]) : {n: null, um: null};
+    var q = pq.n;
+    if (q === null || !q) continue;                 /* una riga senza quantità non è un consumo */
+    var ab = consAbbina(desc);
+    out.push({
+      desc: desc,
+      qta: Math.abs(q),
+      um: (p.col.um >= 0 ? String(riga[p.col.um] || '').trim() : '') || pq.um || '',
+      az: azNorm(p.col.az >= 0 ? riga[p.col.az] : ''),
+      azFile: p.col.az >= 0 ? String(riga[p.col.az] || '').trim() : '',
+      tec: tecNorm(p.col.tec >= 0 ? riga[p.col.tec] : ''),
+      data: consData(p.col.data >= 0 ? riga[p.col.data] : '') || '',
+      rif: p.col.rif >= 0 ? String(riga[p.col.rif] || '').trim() : '',
+      art: ab.art, sim: ab.sim, fonte: ab.fonte,
+      ok: !!ab.art
+    });
+  }
+  return out;
+}
+
+/* le date nei fogli arrivano in ogni forma: gg/mm/aaaa, aaaa-mm-gg, seriale Excel */
+function consData(v) {
+  if (v === null || v === undefined) return '';
+  var s = String(v).trim();
+  if (!s) return '';
+  var m = s.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})$/);
+  if (m) {
+    var y = m[3].length === 2 ? '20' + m[3] : m[3];
+    return y + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2);
+  }
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+  if (/^\d{5}$/.test(s)) {                       /* seriale Excel: giorni dal 30.12.1899 */
+    var d = new Date(Date.UTC(1899, 11, 30) + Number(s) * 86400000);
+    return d.toISOString().slice(0, 10);
+  }
+  var dd = new Date(s);
+  return isNaN(dd.getTime()) ? '' : dd.toISOString().slice(0, 10);
+}
+
+function leggiConsumi(file) {
+  if (senzaXLSX()) return;
+  el('consNota').innerHTML = '<b>Sto leggendo ' + esc(file.name) + '…</b>';
+  var fr = new FileReader();
+  fr.onload = function (e) {
+    var grezzo;
+    try {
+      var wb = XLSX.read(new Uint8Array(e.target.result), {type: 'array'});
+      var ws = wb.Sheets[wb.SheetNames[0]];
+      grezzo = XLSX.utils.sheet_to_json(ws, {header: 1, raw: false, defval: ''});
+    } catch (err) {
+      el('consNota').innerHTML = '<div class="note am"><b>Non riesco a leggere ' + esc(file.name) + '.</b><br>' +
+        esc(err.message) + '</div>';
+      return;
+    }
+    if (!grezzo || !grezzo.length) {
+      el('consNota').innerHTML = '<div class="note am"><b>Il foglio è vuoto.</b></div>';
+      return;
+    }
+    /* l'intestazione: la prima riga delle prime dieci che riconosce almeno due colonne */
+    var hr = 0, meglio = 0;
+    for (var i = 0; i < Math.min(10, grezzo.length); i++) {
+      var n = 0;
+      (grezzo[i] || []).forEach(function (c) {
+        CONS_COL.forEach(function (cc) { if (cc[1].test(norm(String(c)))) n++; });
+      });
+      if (n > meglio) { meglio = n; hr = i; }
+    }
+    var head = (grezzo[hr] || []).map(function (c) { return String(c || '').trim(); });
+    var col = {};
+    CONS_COL.forEach(function (cc) { col[cc[0]] = -1; });
+    head.forEach(function (c, j) {
+      var n2 = norm(c);
+      if (!n2) return;
+      CONS_COL.forEach(function (cc) { if (col[cc[0]] < 0 && cc[1].test(n2)) col[cc[0]] = j; });
+    });
+    /* se la quantità non si riconosce dal nome, la cerco fra le colonne di numeri */
+    if (col.qta < 0) {
+      var cand2 = [];
+      for (var jq = 0; jq < head.length; jq++) {
+        if (jq === col.desc) continue;
+        var num = 0, tot2 = 0;
+        for (var rq = hr + 1; rq < Math.min(hr + 12, grezzo.length); rq++) {
+          var v = String((grezzo[rq] || [])[jq] || '').trim();
+          if (!v) continue;
+          tot2++;
+          if (parseQta(v).n !== null) num++;
+        }
+        if (tot2 && num / tot2 > 0.8) cand2.push(jq);
+      }
+      if (cand2.length) col.qta = cand2[0];
+    }
+    /* senza una colonna articolo non si va da nessuna parte: provo la prima colonna di testo */
+    if (col.desc < 0) {
+      for (var j2 = 0; j2 < head.length; j2++) {
+        var campione = String((grezzo[hr + 1] || [])[j2] || '');
+        if (campione && !/^[\d.,\s]+$/.test(campione)) { col.desc = j2; break; }
+      }
+    }
+    pendCons = {nome: file.name, hr: hr, head: head, col: col, grezzo: grezzo,
+      data: consDaNome(file.name) || oggi()};
+    pendCons.righe = consRighe(pendCons);
+    el('consNota').innerHTML = '';
+    rCons();
+    el('consPend').scrollIntoView({block: 'nearest'});
+  };
+  fr.readAsArrayBuffer(file);
+}
+
+function consDaNome(nome) {
+  var m = String(nome).match(/(\d{2})[._-](\d{2})[._-](\d{2,4})/);
+  if (!m) return '';
+  var y = m[3].length === 2 ? '20' + m[3] : m[3];
+  return y + '-' + m[2] + '-' + m[1];
+}
+
+/* ---------- registrazione ---------- */
+function consRegistra() {
+  if (!pendCons) return;
+  var p = pendCons;
+  var da = p.righe.filter(function (r) { return r.ok && r.art && r.qta > 0; });
+  var err = function (t) { el('consEsito').innerHTML = '<span style="color:var(--ro-700)">' + t + '</span>'; };
+  if (!da.length) return err('Non c\'è nessuna riga pronta: servono un articolo abbinato e una quantità.');
+  var senzaAz = da.filter(function (r) { return !r.az; });
+  if (senzaAz.length) return err('<b>' + plur(senzaAz.length, 'riga senza azienda', 'righe senza azienda') +
+    '.</b> L\'azienda è il motivo per cui carichiamo questo elenco: dilla, oppure togli la spunta a quelle righe.');
+
+  var doc = {id: uid('c'), nome: p.nome, at: oggi(), data: p.data, col: {}, righe: [], caricato: true};
+  CONS_COL.forEach(function (cc) { doc.col[cc[0]] = p.col[cc[0]] >= 0 ? p.head[p.col[cc[0]]] || ('colonna ' + (p.col[cc[0]] + 1)) : ''; });
+
+  var n = 0, pezzi = 0;
+  da.forEach(function (r) {
+    var a = art(r.art);
+    if (!a) return;
+    var rif = r.rif || ('consumi ' + p.nome);
+    var m = aggiungiMov('scarico', a.id, r.qta, '', rif, r.desc, r.data || p.data, r.az, r.tec);
+    m.azMano = 1;                       /* viene da un elenco dichiarato, non da una deduzione */
+    m.cons = doc.id;
+    doc.righe.push({desc: r.desc, art: r.art, qta: r.qta, um: r.um, az: r.az, tec: r.tec,
+      data: r.data || p.data, rif: r.rif, mov: m.id});
+    /* la correzione dell'abbinamento vale anche per la settimana prossima */
+    S.settings.consMap = S.settings.consMap || {};
+    S.settings.consMap[consMapKey(r.desc)] = r.art;
+    n++; pezzi += r.qta;
+  });
+  S.cons.push(doc);
+  pendCons = null;
+  tocca(); persist(); aggiorna();
+  toast(plur(n, 'consumo registrato', 'consumi registrati'));
+  el('consEsito').innerHTML = '<b>' + plur(n, 'riga registrata', 'righe registrate') + '</b> da ' + esc(doc.nome) + '.';
+}
+
+function consElimina(id) {
+  var d = null;
+  S.cons.forEach(function (x) { if (x.id === id) d = x; });
+  if (!d) return;
+  if (!confirm('Tolgo «' + d.nome + '» e i ' + d.righe.length + ' scarichi che ha registrato?')) return;
+  var ids = {};
+  d.righe.forEach(function (r) { if (r.mov) ids[r.mov] = 1; });
+  S.mov = S.mov.filter(function (m) { return !ids[m.id]; });
+  S.cons = S.cons.filter(function (x) { return x.id !== id; });
+  tocca(); persist(); aggiorna();
+  toast('Elenco rimosso con i suoi scarichi');
+}
+
+/* ---------- la schermata ---------- */
+function consTot(p) {
+  var t = {righe: p.righe.length, pronte: 0, senzaArt: 0, senzaAz: 0, qta: 0, az: {}, tec: {}};
+  p.righe.forEach(function (r) {
+    if (!r.art) t.senzaArt++;
+    if (!r.az) t.senzaAz++;
+    if (r.ok && r.art) { t.pronte++; t.qta += r.qta; }
+    if (r.az) t.az[r.az] = (t.az[r.az] || 0) + 1;
+    if (r.tec) t.tec[r.tec] = (t.tec[r.tec] || 0) + 1;
+  });
+  return t;
+}
+
+function consSelArt(r, i) {
+  var cand = r.art ? [] : candidati(r.desc).slice(0, 6);
+  var h = '<select class="ed" data-consart="' + i + '" style="min-width:200px">' +
+    '<option value="">— da abbinare —</option>';
+  var dentro = {};
+  if (r.art) { dentro[r.art] = 1; }
+  cand.forEach(function (c) { dentro[c.a.id] = 1; });
+  S.art.slice().sort(function (x, y) { return norm(x.voce) < norm(y.voce) ? -1 : 1; }).forEach(function (a) {
+    h += '<option value="' + a.id + '"' + (a.id === r.art ? ' selected' : '') + '>' + esc(a.voce) + '</option>';
+  });
+  return h + '</select>';
+}
+
+function rCons() {
+  /* --- il foglio appena letto --- */
+  if (!pendCons) {
+    el('consPend').style.display = 'none';
+  } else {
+    var p = pendCons, t = consTot(p);
+    el('consPend').style.display = '';
+    el('consPendT').innerHTML = esc(p.nome) +
+      '<span class="hint">' + plur(t.righe, 'riga letta', 'righe lette') + ' · ' +
+      t.pronte + ' pronte' + (t.senzaArt ? ' · ' + t.senzaArt + ' da abbinare' : '') +
+      (t.senzaAz ? ' · ' + t.senzaAz + ' senza azienda' : '') + '</span>';
+
+    /* la mappatura delle colonne, cambiabile */
+    var opt = function (sel) {
+      var o = '<option value="-1">— nessuna —</option>';
+      p.head.forEach(function (c, j) {
+        o += '<option value="' + j + '"' + (j === sel ? ' selected' : '') + '>' +
+          esc(c || ('colonna ' + (j + 1))) + '</option>';
+      });
+      return o;
+    };
+    var hm = '<div class="rowform rcons">';
+    CONS_COL.forEach(function (cc) {
+      hm += '<div class="f"><label>' + esc(cc[2]) + '</label><select data-conscol="' + cc[0] + '">' +
+        opt(p.col[cc[0]]) + '</select></div>';
+    });
+    hm += '<div class="f"><label>Settimana del</label><input type="date" id="consData" value="' + esc(p.data) + '"></div>';
+    hm += '</div>';
+    el('consMap').innerHTML = hm;
+
+    var ha = {};
+    Object.keys(t.az).forEach(function (z) { ha[z] = t.az[z]; });
+    el('consRiass').innerHTML = (Object.keys(ha).length
+      ? 'Aziende nel file: ' + Object.keys(ha).map(function (z) {
+          return '<span class="p ' + (azElenco().indexOf(z) === 0 ? 'ok' : 'bl') + '">' + esc(z) + ' · ' + ha[z] + '</span>';
+        }).join(' ')
+      : '<span class="p sotto">nessuna azienda riconosciuta nel file</span>') +
+      (Object.keys(t.tec).length ? ' &nbsp; Tecnici: ' + Object.keys(t.tec).sort().map(function (x) {
+        return esc(x) + ' (' + t.tec[x] + ')'; }).join(' · ') : '');
+
+    if (!p.righe.length) {
+      el('consPendB').innerHTML = '<div class="vuoto">Non ho trovato righe con un articolo e una quantità. ' +
+        'Controlla la mappatura delle colonne qui sopra.</div>';
+    } else {
+      var h = '<table class="t"><thead><tr><th class="c">Prendi</th><th>Nel file</th>' +
+        '<th>Articolo di magazzino<span class="mod">modificabile</span></th>' +
+        '<th class="n">Quantità</th><th>Azienda<span class="mod">modificabile</span></th>' +
+        '<th>Tecnico<span class="mod">modificabile</span></th><th>Data</th><th>Riferimento</th></tr></thead><tbody>';
+      p.righe.forEach(function (r, i) {
+        var a = r.art ? art(r.art) : null;
+        h += '<tr' + (r.ok ? '' : ' class="spento"') + '>' +
+          '<td class="c"><input type="checkbox" data-consok="' + i + '"' + (r.ok ? ' checked' : '') + '></td>' +
+          '<td class="voce">' + esc(r.desc) +
+            (r.azFile && !r.az ? '<span class="sub">azienda nel file: ' + esc(r.azFile) + ' — non la riconosco</span>' : '') + '</td>' +
+          '<td' + (a ? '' : ' class="manca"') + '>' + consSelArt(r, i) +
+            (a && r.fonte ? '<span class="sub">' + esc(r.fonte) + (r.sim < 1 ? ' · ' + Math.round(r.sim * 100) + '%' : '') + '</span>' : '') + '</td>' +
+          '<td class="n mono">' + nf(r.qta, 2) + ' ' + esc(r.um || (a ? a.um : '')) + '</td>' +
+          '<td' + (r.az ? '' : ' class="manca"') + '><select class="ed" data-consaz="' + i + '" style="min-width:130px">' +
+            azOpt(r.az) + '</select></td>' +
+          '<td><input class="ed" data-constec="' + i + '" list="tecList" value="' + esc(r.tec) +
+            '" placeholder="—" style="width:110px"></td>' +
+          '<td class="mono dim">' + (r.data ? dataIt(r.data) : dataIt(p.data)) + '</td>' +
+          '<td class="dim">' + esc(r.rif || '—') + '</td></tr>';
+      });
+      el('consPendB').innerHTML = h + '</tbody></table>';
+    }
+  }
+
+  /* --- gli elenchi già registrati --- */
+  var hs = '';
+  if (!S.cons.length) {
+    hs = '<div class="vuoto">Nessun elenco caricato. Trascina qui sopra il foglio dei consumi della settimana: ' +
+      'riconosco da solo le colonne e ti faccio vedere cosa ho capito prima di registrare niente.</div>';
+  } else {
+    hs = '<table class="t"><thead><tr><th>File</th><th>Settimana</th><th class="n">Righe</th>' +
+      '<th>Aziende</th><th>Tecnici</th><th>Caricato il</th><th></th></tr></thead><tbody>';
+    S.cons.slice().reverse().forEach(function (d) {
+      var az = {}, tc = {};
+      d.righe.forEach(function (r) { if (r.az) az[r.az] = (az[r.az] || 0) + 1; if (r.tec) tc[r.tec] = 1; });
+      hs += '<tr><td class="voce">' + esc(d.nome) + '</td>' +
+        '<td class="mono">' + dataIt(d.data) + '</td>' +
+        '<td class="n mono">' + nf(d.righe.length, 0) + '</td>' +
+        '<td>' + Object.keys(az).map(function (z) {
+          return '<span class="p ' + (azElenco().indexOf(z) === 0 ? 'ok' : 'bl') + '">' + esc(azBreve(z)) + ' · ' + az[z] + '</span>';
+        }).join(' ') + '</td>' +
+        '<td class="dim">' + (Object.keys(tc).sort().map(esc).join(', ') || '—') + '</td>' +
+        '<td class="mono dim">' + dataIt(d.at) + '</td>' +
+        '<td><button class="bx" data-consdel="' + d.id + '" title="toglie l\'elenco e i suoi scarichi">✕</button></td></tr>';
+    });
+    hs += '</tbody></table>';
+  }
+  el('consStoria').innerHTML = hs;
+
+  /* --- gli scarichi che si portano dietro la vecchia deduzione dal furgone --- */
+  var sos = azSospetti();
+  if (!sos.length) el('consSosp').style.display = 'none';
+  else {
+    el('consSosp').style.display = '';
+    el('consSospB').innerHTML = '<div class="note am"><b>' +
+      plur(sos.length, 'scarico ha preso l\'azienda dal furgone', 'scarichi hanno preso l\'azienda dal furgone') +
+      '.</b><br>Era la vecchia regola, prima che mi dicessi che i mezzi di un\'azienda fanno servizi anche per l\'altra. ' +
+      'Non li ho toccati: controllali in <a href="#mov" data-vai="mov">Movimenti</a>, oppure togli l\'azienda a tutti e rimettila dagli elenchi dei consumi.' +
+      '<div class="sp"></div><button class="b" id="bConsLibera">Togli l\'azienda a ' +
+      plur(sos.length, 'quello scarico', 'quegli scarichi') + '</button></div>';
+    el('bConsLibera').onclick = function () {
+      azSospetti().forEach(function (m) { m.az = ''; });
+      tocca(); persist(); aggiorna();
+      toast('Azienda tolta: ora la decide l\'elenco dei consumi');
+    };
+  }
+}
+
 /* --- i comandi del conto fra le aziende --- */
 el('qAz').addEventListener('input', function () { cerca(rAz); });
 el('bAzXls').onclick = azEsporta;
+
+/* --- i comandi dei consumi settimanali --- */
+el('dropCons').onclick = function () { chiediFile('.xlsx,.xls,.csv', leggiConsumi); };
+['dragenter', 'dragover'].forEach(function (e) {
+  el('dropCons').addEventListener(e, function (ev) { ev.preventDefault(); this.className = 'drop hov'; });
+});
+el('dropCons').addEventListener('dragleave', function () { this.className = 'drop'; });
+el('dropCons').addEventListener('drop', function (ev) {
+  ev.preventDefault(); this.className = 'drop';
+  var f = ev.dataTransfer.files && ev.dataTransfer.files[0];
+  if (f) leggiConsumi(f);
+});
+el('bConsOk').onclick = consRegistra;
+el('bConsAnnulla').onclick = function () { pendCons = null; el('consEsito').innerHTML = ''; rCons(); };
 
 
 /* ====================== CARICA UN FURGONE (più articoli) ======================
@@ -4875,6 +5409,10 @@ window.FM = {S: function () { return S; }, giac: giac, stato: stato, consumo: co
   aggiungiMov: aggiungiMov, effMag: effMag, leggiDdt: leggiDdt, abbinaRiga: abbinaRiga,
   effFurg: effFurg, dotRiga: dotRiga, dotPiano: dotPiano, rDot: rDot,
   conto: conto, azMov: azMov, azElenco: azElenco, azNorm: azNorm, rAz: rAz,
+  tecElenco: tecElenco, tecNorm: tecNorm, azSospetti: azSospetti, tecAz: tecAz, tocca: tocca,
+  leggiConsumi: leggiConsumi, consRegistra: consRegistra, consElimina: consElimina,
+  consRighe: consRighe, consData: consData, rCons: rCons,
+  pendCons: function (v) { if (v !== undefined) { pendCons = v; rCons(); } return pendCons; },
   azDa: function (v) { if (v !== undefined) { azDa = v; rAz(); } return azDa; },
   dotQ: function (v) { if (v !== undefined) { dotQ = v; rDot(); } return dotQ; },
   ddtApplica: ddtApplica, ddtAggiungi: ddtAggiungi, ddtAnteriore: ddtAnteriore,
