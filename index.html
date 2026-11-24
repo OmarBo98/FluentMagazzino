@@ -950,7 +950,7 @@ function statoIniziale() {
   var lamp = SEED_LAMP.map(function (l) {
     return {id: uid('l'), mq: l.mq, f: {ORMA: l.orma, NEWPHARM: l.new}};
   });
-  return {
+  var s0 = {
     v: 1, art: art, inv: inv, mov: [], seq: 0, conf: conf, lamp: lamp,
     forn: ['ORMA', 'NEWPHARM'], files: [
       {nome: 'giacenze_04.11.26_magazzino.xlsx', at: '2026-11-04', cosa: 'inventario di partenza, ' + art.length + ' articoli'},
@@ -962,8 +962,60 @@ function statoIniziale() {
     listino: JSON.parse(JSON.stringify(SEED_LIST)),
     furgoni: JSON.parse(JSON.stringify(SEED_FURG)), ddt: [], cons: []
   };
+  applicaPrezzi(s0);
+  return s0;
 }
 /* unisce i dati nuovi del programma nei dati già salvati, senza perdere le modifiche a mano */
+
+/* ---------- prezzi di acquisto ricavati dagli ordini ORMA e NEWPHARM (nov 2026) ----------
+   Vengono dai documenti d'ordine, non dai listini: è quello che le due aziende hanno
+   pagato davvero. Si scrivono solo dove il prezzo manca, così le correzioni fatte a
+   mano restano al loro posto.                                                        */
+var SEED_PREZZI = [
+  ['Erogatore Fusion', 4.70], ['Geracyp', 11.25], ['Granulare Formiche', 6.70],
+  ['Masterbox Trasparente', 4.99], ['NEXA Formiche', 17.80], ['Perme Plus', 15.80],
+  ['Vaschetta Collante', 0.97], ['attrattivo per drosofilidi', 7.32],
+  ['attrattivo per vespe', 7.10], ['chips inzecto', 8.12], ['easy trap lepidotteri', 2.09],
+  ["erogatore d'esca finta pietra", 13.53], ['trappola cimici bug scents', 15.36],
+  ['labiogard', 4.22], ['labspray', 2.62], ['recidal sil', 10.82],
+  ['Bomboletta di Piretro', 5.85], ['erogatore automatico piretro', 14.22],
+  ['trappola a scatto t-rex', 2.67], ['trappola mosche M', 2.93],
+  ['trappola mosche L', 4.29], ['trappola drosofilidi cartoncino', 3.09]
+];
+/* due articoli che in magazzino non c'erano: li porta l'ordine ORMA */
+var SEED_NUOVI = [
+  {voce: 'glicole', cat: 'altro', um: 'L', acq: 5.20},
+  {voce: 'corda feromonica per lepidotteri', cat: 'lepidotteri', um: 'mt', acq: 14.48}
+];
+function applicaPrezzi(s) {
+  if (s.settings.prezziOrdini2611) return;
+  s.settings.prezziOrdini2611 = 1;
+  var perVoce = {}, perArt = {};
+  s.listino.forEach(function (l) { perVoce[norm(l.voce)] = l; if (l.art) perArt[l.art] = l; });
+  var byArt = {};
+  s.art.forEach(function (x) { byArt[norm(x.voce)] = x; });
+  SEED_PREZZI.forEach(function (p) {
+    var l = perVoce[norm(p[0])];
+    if (!l) { var a = byArt[norm(p[0])]; if (a) l = perArt[a.id]; }
+    if (l) { if (l.acq === null || l.acq === undefined || l.acq === '') l.acq = p[1]; return; }
+    /* l'articolo c'è ma non ha una riga di listino: la riga nasce col prezzo dell'ordine */
+    var a2 = byArt[norm(p[0])];
+    if (!a2) return;
+    var nl = {id: 'l-' + a2.id, voce: a2.voce, um: a2.um, acq: p[1], vend: null,
+      stato: 'da confermare', note: 'prezzo da ordine fornitore', art: a2.id,
+      sim: 1, sug: '', corr: false, ver: false};
+    s.listino.push(nl); perVoce[norm(nl.voce)] = nl; perArt[a2.id] = nl;
+  });
+  SEED_NUOVI.forEach(function (nv) {
+    if (byArt[norm(nv.voce)]) return;
+    var id = norm(nv.voce).replace(/ /g, '-');
+    s.art.push({id: id, voce: nv.voce, cat: nv.cat, um: nv.um, sotto: null, giac: null,
+      note: 'aggiunto dagli ordini ORMA', forn: 'ORMA', st: {}, prenSrc: ''});
+    s.listino.push({id: 'l-' + id, voce: nv.voce, um: nv.um, acq: nv.acq, vend: null,
+      stato: 'da confermare', note: 'prezzo dall\'ordine ORMA', art: id, sim: 1, sug: '', corr: false, ver: false});
+  });
+}
+
 function migra(s) {
   if (!s || !s.art) return statoIniziale();
   s.forn = s.forn || ['ORMA', 'NEWPHARM'];
@@ -1000,6 +1052,7 @@ function migra(s) {
       if (!hl[l.id]) s.listino.push(JSON.parse(JSON.stringify(l)));
     });
   }
+  applicaPrezzi(s);
   var perData = {};
   s.inv.forEach(function (iv) { if (!iv.s) iv.s = {}; perData[iv.data] = iv; });
   SEED_INV.forEach(function (v) {        /* la sottoscorta storica è un campo nuovo: si innesta senza sovrascrivere nulla */
@@ -5794,6 +5847,7 @@ window.FM = {S: function () { return S; }, giac: giac, stato: stato, consumo: co
   effFurg: effFurg, dotRiga: dotRiga, dotPiano: dotPiano, rDot: rDot,
   conto: conto, azMov: azMov, azElenco: azElenco, azNorm: azNorm, rAz: rAz,
   tecElenco: tecElenco, tecNorm: tecNorm, azSospetti: azSospetti, tecAz: tecAz, tocca: tocca,
+  applicaPrezzi: applicaPrezzi, SEED_PREZZI: function () { return SEED_PREZZI; },
   leggiConsumi: leggiConsumi, consRegistra: consRegistra, consElimina: consElimina,
   consRighe: consRighe, consData: consData, rCons: rCons,
   pendCons: function (v) { if (v !== undefined) { pendCons = v; rCons(); } return pendCons; },
