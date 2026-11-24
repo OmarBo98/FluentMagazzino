@@ -587,6 +587,7 @@ tr.riga-no td{opacity:.5}
     <p class="sec-d">Il magazzino è uno solo, ma a riempirlo e a svuotarlo sono NSA e Sanitech. Ogni carico porta con sé chi ha comprato e ogni scarico chi ha consumato: la differenza dice quanto ciascuna ha messo e quanto ha preso, e se una sta consumando la merce dell'altra. Le dotazioni dichiarate già a bordo restano fuori dal conto — non sono acquisti — ma le trovi elencate in fondo.</p>
 
     <div class="bar">
+      <select id="azChi"></select>
       <select id="azDa"></select>
       <input type="search" id="qAz" placeholder="Cerca l'articolo…">
       <label><input type="checkbox" id="azScomp"> solo gli articoli con uno scarto</label>
@@ -602,6 +603,18 @@ tr.riga-no td{opacity:.5}
       <div class="bd"><div id="azCh"></div></div></div>
 
     <div class="card"><div class="bd flush"><div class="tw tall" id="azT"></div></div></div>
+
+    <div class="card" id="azCh2" style="display:none"><h3>Comprato e consumato<span class="hint">per articolo, in euro ai prezzi di acquisto; in fondo alla riga la differenza</span></h3>
+      <div class="bd"><div id="azCh2B"></div></div></div>
+
+    <div class="card" id="azForn" style="display:none"><h3>Da chi ha comprato<span class="hint">il fornitore è la testa del riferimento del carico</span></h3>
+      <div class="bd flush"><div class="tw" id="azFornB"></div></div></div>
+
+    <div class="card" id="azTecA" style="display:none"><h3>Chi ha consumato per lei<span class="hint">compresi i tecnici dell'altra squadra</span></h3>
+      <div class="bd flush"><div class="tw" id="azTecAB"></div></div></div>
+
+    <div class="card" id="azMovA" style="display:none"><h3>Tutti i movimenti<span class="hint">carichi e scarichi riga per riga</span></h3>
+      <div class="bd flush"><div class="tw tall" id="azMovB"></div></div></div>
 
     <div class="card" id="azTec" style="display:none"><h3>Chi ha consumato, e per chi<span class="hint">in euro ai prezzi di acquisto; la squadra è quella del furgone assegnato</span></h3>
       <div class="bd flush"><div class="tw" id="azTecB"></div></div></div>
@@ -2127,10 +2140,12 @@ function rDdt() {
       '<div class="gap" style="flex:1"></div>' +
       (d.caricato ? '' : '<label style="font-size:11.5px;color:var(--ink-600)">Comprato da ' +
         '<select class="ed" data-ddtaz="' + d.id + '" style="min-width:130px">' +
-        azOpt(d.az !== undefined && d.az !== null ? d.az : azNorm(d.azienda)) + '</select></label>') +
+        azOpt(ddtAz(d)) + '</select></label>') +
       (d.caricato
         ? '<span class="p ok">caricato in magazzino</span>'
-        : '<button class="b pri" data-ddtok="' + d.id + '"' + (t.ok ? '' : ' disabled') + '>Carica in magazzino (' + t.ok + ')</button>') +
+        : '<button class="b pri" data-ddtok="' + d.id + '"' + (t.ok && ddtAz(d) ? '' : ' disabled') +
+            '>Carica in magazzino (' + t.ok + ')</button>' +
+          (t.ok && !ddtAz(d) ? '<span class="p sotto">dimmi prima per quale azienda</span>' : '')) +
       '<label style="font-size:11.5px;color:var(--ink-600)"><input type="checkbox" data-ddtpr="' + d.id + '"' +
         (d.aggPrezzi ? ' checked' : '') + '> aggiorna i prezzi di acquisto a listino</label>' +
       '<button class="bx" data-delddt="' + d.id + '">✕</button></div>';
@@ -2168,10 +2183,18 @@ function rDdt() {
   el('ddtLista').innerHTML = h;
 }
 
+/* l'azienda della bolla: quella scelta a mano, o quella letta dal documento */
+function ddtAz(d) {
+  /* se l'ho scelta a mano vale quella, anche quando l'ho svuotata apposta */
+  if (d.az !== undefined && d.az !== null) return azNorm(d.az);
+  return azNorm(d.azienda);
+}
 function ddtApplica(id) {
   var d = null;
   S.ddt.forEach(function (x) { if (x.id === id) d = x; });
   if (!d) return;
+  /* un carico senza azienda resterebbe fuori dal conto fra le due: meglio fermarsi */
+  if (!ddtAz(d)) { toast('Scegli prima per quale azienda è questa merce'); return; }
   var n = 0, prezzi = 0;
   d.righe.forEach(function (r) {
     if (!r.ok || r.fatto || !r.art) return;
@@ -2180,7 +2203,7 @@ function ddtApplica(id) {
     var rif = (d.fornitore || 'fornitore') + (r.ddtNum ? ' · DDT ' + r.ddtNum : '') +
       (d.doc.num ? ' · ' + d.doc.tipo + ' ' + d.doc.num : '');
     var m = aggiungiMov('carico', a.id, r.qta, '', rif, r.desc,
-      r.ddtData || d.doc.data || oggi(), azNorm(d.az || d.azienda));
+      r.ddtData || d.doc.data || oggi(), ddtAz(d));
     r.fatto = true; r.mov = m.id; n++;
     /* la memoria dei codici: dalla prossima bolla l'abbinamento è immediato */
     if (r.cod) {
@@ -4079,6 +4102,7 @@ document.addEventListener('change', function (ev) {
   }
   if (t.id === 'fDotCat' || t.id === 'fDotScritti' || t.id === 'dtModo' || t.id === 'dtProv') { rDot(); return; }
   if (t.id === 'azDa') { azDa = t.value; rAz(); return; }
+  if (t.id === 'azChi') { azChi = t.value; rAz(); return; }
   if (t.id === 'consData' && pendCons) { pendCons.data = t.value; rCons(); return; }
   var cc = t.getAttribute('data-conscol');
   if (cc && pendCons) {
@@ -4160,6 +4184,12 @@ document.addEventListener('click', function (ev) {
     persist(); aggiorna(); toast('Riga di listino eliminata'); return;
   }
   if ((id = t.getAttribute('data-consdel'))) { consElimina(id); return; }
+  var azm = t.getAttribute('data-azmsrt');
+  if (azm !== null && azm !== undefined) {
+    if (azMovSort.k === azm) azMovSort.d = -azMovSort.d;
+    else { azMovSort.k = azm; azMovSort.d = (azm === 'voce' || azm === 'tec' || azm === 'tipo') ? 1 : -1; }
+    rAz(); return;
+  }
   var azs = t.getAttribute('data-azsrt');
   if (azs !== null && azs !== undefined) {
     if (azArtSort.k === azs) azArtSort.d = -azArtSort.d; else { azArtSort.k = azs; azArtSort.d = azs === 'voce' ? 1 : -1; }
@@ -4313,6 +4343,8 @@ el('mvTipo').addEventListener('change', aggiornaLuogo);
 var azDa = null;              /* data di partenza del conto; null = inventario attivo */
 var azArtSort = {k: 'eur', d: -1};
 var azSoloScomp = false;
+var azChi = '';          /* '' = confronto fra le due; altrimenti il nome dell'azienda */
+var azMovSort = {k: 'data', d: -1};
 
 function azDataDa() {
   if (azDa === '') return '';                 /* da sempre */
@@ -4461,18 +4493,34 @@ function azGrafico(c) {
 function tronca(s, n) { return String(s).length > n ? String(s).slice(0, n - 1) + '…' : String(s); }
 
 function rAz() {
-  var c = conto(), az = c.az, t = c.tot;
-
-  /* --- il periodo --- */
-  var sel = el('azDa');
-  if (sel.getAttribute('data-n') !== String(S.inv.length)) {
-    sel.innerHTML = '<option value="">Da sempre</option>' +
+  /* il periodo e la scelta dell'azienda valgono per tutte e due le viste */
+  var selC = el('azChi');
+  if (selC.getAttribute('data-n') !== String(azElenco().length)) {
+    selC.innerHTML = '<option value="">Confronto fra le due</option>' +
+      azElenco().map(function (z) { return '<option value="' + esc(z) + '">Solo ' + esc(z) + '</option>'; }).join('');
+    selC.setAttribute('data-n', String(azElenco().length));
+    selC.value = azChi;
+  }
+  var selD = el('azDa');
+  if (selD.getAttribute('data-n') !== String(S.inv.length)) {
+    selD.innerHTML = '<option value="">Da sempre</option>' +
       invOrd().map(function (iv) {
         return '<option value="' + esc(iv.data) + '">Dall\'inventario del ' + dataIt(iv.data) + '</option>';
       }).join('');
-    sel.setAttribute('data-n', String(S.inv.length));
-    sel.value = azDataDa();
+    selD.setAttribute('data-n', String(S.inv.length));
+    selD.value = azDataDa();
   }
+  var soloUna = azChi && azElenco().indexOf(azChi) >= 0;
+  ['azCh2', 'azForn', 'azTecA', 'azMovA'].forEach(function (k) {
+    el(k).style.display = soloUna ? '' : 'none';
+  });
+  el('azTec').style.display = soloUna ? 'none' : '';
+  el('bAzXls').textContent = soloUna ? 'Scarica ' + azBreve(azChi) + ' in Excel' : 'Scarica in Excel';
+  if (soloUna) return rAzUna(azChi);
+  return rAzConfronto();
+}
+function rAzConfronto() {
+  var c = conto(), az = c.az, t = c.tot;
 
   /* --- i riquadri: in euro, perché i pezzi di articoli diversi non si sommano --- */
   var eurComp = {}, eurCons = {}, muti = {};
@@ -5054,9 +5102,340 @@ function rCons() {
   }
 }
 
+/* ---------- la vista di una sola azienda ----------
+   Tutto quello che quell'azienda ha messo e preso: gli articoli, i fornitori da
+   cui ha comprato, i tecnici che hanno consumato per lei e l'elenco riga per
+   riga dei movimenti, con i totali in euro ai prezzi di acquisto.            */
+
+/* il fornitore sta in testa al riferimento del carico, prima del primo separatore */
+function azForni(m) {
+  var r = String(m.rif || '').split(' · ')[0].trim();
+  return r || '(senza riferimento)';
+}
+function azMoviDi(z) {
+  var da = azDataDa();
+  return S.mov.filter(function (m) {
+    if (m.tipo !== 'carico' && m.tipo !== 'scarico') return false;
+    if (azMov(m) !== z) return false;
+    if (da && m.data < da) return false;
+    return true;
+  });
+}
+function azValore(m) {
+  var a = art(m.art), pa = a ? pAcq(a) : null;
+  return pa === null ? null : qMov(m) * pa;
+}
+
+function rAzUna(z) {
+  var c = conto(), i = azElenco().indexOf(z), col = azColore(z, i);
+  var mv = azMoviDi(z);
+  var car = mv.filter(function (m) { return m.tipo === 'carico'; });
+  var sca = mv.filter(function (m) { return m.tipo === 'scarico'; });
+  var somma = function (lista) {
+    var e = 0, muti = 0;
+    lista.forEach(function (m) { var v = azValore(m); if (v === null) muti++; else e += v; });
+    return {eur: e, muti: muti, n: lista.length};
+  };
+  var sc = somma(car), ss = somma(sca), saldo = sc.eur - ss.eur;
+  var bordo = c.tot.eurBordo[z] || 0;
+
+  /* --- i riquadri --- */
+  el('azKpi').innerHTML =
+    '<div class="kpi"><div class="l" style="color:' + col + '">Comprato</div><div class="v">' +
+      eur(sc.eur, 0) + '</div><div class="s">' + plur(sc.n, 'carico', 'carichi') +
+      (sc.muti ? ' · ' + plur(sc.muti, 'senza prezzo', 'senza prezzo') : '') + '</div></div>' +
+    '<div class="kpi"><div class="l" style="color:' + col + '">Consumato</div><div class="v">' +
+      eur(ss.eur, 0) + '</div><div class="s">' + plur(ss.n, 'scarico', 'scarichi') +
+      (ss.muti ? ' · ' + plur(ss.muti, 'senza prezzo', 'senza prezzo') : '') + '</div></div>' +
+    '<div class="kpi' + (saldo > 0.5 ? ' em' : saldo < -0.5 ? ' ro' : '') + '"><div class="l">Saldo</div><div class="v">' +
+      (saldo > 0 ? '+' : '') + eur(saldo, 0) + '</div><div class="s">quanto ha messo meno quanto ha preso</div></div>' +
+    '<div class="kpi"><div class="l">Sui suoi furgoni</div><div class="v">' + eur(bordo, 0) +
+      '</div><div class="s">merce in mano ai mezzi di ' + esc(azBreve(z)) + '</div></div>';
+
+  /* --- la frase --- */
+  var f;
+  if (!mv.length) {
+    f = '<b>Nessun movimento di ' + esc(z) + ' nel periodo scelto.</b> Qui compaiono i carichi ' +
+      'registrati a suo nome e i consumi che le hai attribuito.';
+  } else {
+    f = '<b>' + esc(z) + ' ha comprato ' + eur(sc.eur, 0) + ' di merce e ne ha consumata ' + eur(ss.eur, 0) + '.</b> ';
+    f += saldo > 0.5
+      ? 'Ha messo in magazzino ' + eur(saldo, 0) + ' più di quanto ha preso: quella merce è a disposizione dell\'altra azienda.'
+      : saldo < -0.5
+        ? 'Ha preso ' + eur(-saldo, 0) + ' più di quanto ha messo: la differenza è merce dell\'altra azienda.'
+        : 'Il suo conto è in pari.';
+    if (sc.muti || ss.muti) {
+      f += '<span class="nota">' + plur(sc.muti + ss.muti, 'riga senza prezzo di acquisto',
+        'righe senza prezzo di acquisto') + ': conta nei pezzi ma non negli euro. I prezzi si mettono nel ' +
+        '<a href="#lis" data-vai="lis">Listino</a>.</span>';
+    }
+  }
+  el('azFrase').innerHTML = f;
+
+  /* --- il grafico: comprato contro consumato, per articolo --- */
+  el('azCh2B').innerHTML = azGraficoUna(z, c, col);
+  el('azCh').innerHTML = '';
+
+  /* --- gli articoli --- */
+  var q = norm(el('qAz').value);
+  var righe = S.art.filter(function (a) {
+    var r = c.perArt[a.id];
+    if (!r.comprato[z] && !r.consumato[z]) return false;
+    if (azSoloScomp && Math.abs(r.saldo[z]) < 1e-9) return false;
+    if (q && norm(a.voce + ' ' + a.cat).indexOf(q) < 0) return false;
+    return true;
+  });
+  righe.sort(function (x, y) {
+    var rx = c.perArt[x.id], ry = c.perArt[y.id], kx, ky;
+    if (azArtSort.k === 'voce') { kx = norm(x.voce); ky = norm(y.voce); }
+    else if (azArtSort.k === 'c-0') { kx = rx.comprato[z]; ky = ry.comprato[z]; }
+    else if (azArtSort.k === 'u-0') { kx = rx.consumato[z]; ky = ry.consumato[z]; }
+    else if (azArtSort.k === 's-0') { kx = rx.saldo[z]; ky = ry.saldo[z]; }
+    else { kx = rx.pa === null ? -1e12 : Math.abs(rx.saldo[z] * rx.pa);
+           ky = ry.pa === null ? -1e12 : Math.abs(ry.saldo[z] * ry.pa); }
+    if (kx === ky) return norm(x.voce) < norm(y.voce) ? -1 : 1;
+    return (kx < ky ? -1 : 1) * azArtSort.d;
+  });
+  el('azCount').textContent = plur(righe.length, 'articolo mosso', 'articoli mossi') + ' da ' + azBreve(z) +
+    (c.da ? ' dal ' + dataIt(c.da) : ' da sempre');
+
+  if (!righe.length) {
+    el('azT').innerHTML = '<div class="vuoto">Nessun movimento di ' + esc(z) + ' nel periodo scelto.</div>';
+  } else {
+    function th2(key, et, cls) {
+      return '<th class="srt ' + (cls || '') + (azArtSort.k === key ? (azArtSort.d > 0 ? ' a' : ' d') : '') +
+        '" data-azsrt="' + key + '">' + et + '</th>';
+    }
+    var h = '<table class="t"><thead><tr>' + th2('voce', 'Articolo') + '<th class="c">UM</th>' +
+      th2('c-0', 'Comprato', 'n') + th2('u-0', 'Consumato', 'n') + th2('s-0', 'Saldo', 'n') +
+      '<th class="n">Prezzo acq.</th>' + th2('eur', 'Saldo in €', 'n') + '</tr></thead><tbody>';
+    var te = 0, tc = 0, tu = 0;
+    righe.forEach(function (a) {
+      var r = c.perArt[a.id], sa = r.saldo[z], e = r.pa === null ? null : sa * r.pa;
+      if (e !== null) { te += e; tc += r.comprato[z] * r.pa; tu += r.consumato[z] * r.pa; }
+      h += '<tr><td class="voce">' + esc(a.voce) + '</td><td class="c dim">' + esc(a.um) + '</td>' +
+        '<td class="n mono' + (r.comprato[z] ? '' : ' dim') + '">' + (r.comprato[z] ? nf(r.comprato[z], 2) : '—') + '</td>' +
+        '<td class="n mono' + (r.consumato[z] ? '' : ' dim') + '">' + (r.consumato[z] ? nf(r.consumato[z], 2) : '—') + '</td>' +
+        '<td class="n mono" style="font-weight:600;color:' +
+          (sa > 1e-9 ? 'var(--em-700)' : sa < -1e-9 ? 'var(--ro-700)' : 'var(--ink-400)') + '">' +
+          (Math.abs(sa) < 1e-9 ? '0' : (sa > 0 ? '+' : '') + nf(sa, 2)) + '</td>' +
+        '<td class="n mono' + (r.pa === null ? ' manca' : ' dim') + '">' + (r.pa === null ? 'manca' : eur(r.pa, 2)) + '</td>' +
+        '<td class="n mono" style="font-weight:600">' + (e === null ? '<span class="dim">—</span>'
+          : (Math.abs(e) < 0.5 ? '—' : (e > 0 ? '+' : '') + eur(e, 0))) + '</td></tr>';
+    });
+    h += '<tr class="tot"><td>' + plur(righe.length, 'articolo', 'articoli') + '</td>' +
+      '<td class="dim" style="font-weight:400">in €</td>' +
+      '<td class="n mono">' + eur(tc, 0) + '</td><td class="n mono">' + eur(tu, 0) + '</td>' +
+      '<td class="n mono" style="font-weight:700">' + (te > 0 ? '+' : '') + eur(te, 0) + '</td>' +
+      '<td></td><td class="n mono" style="font-weight:700">' + (te > 0 ? '+' : '') + eur(te, 0) + '</td></tr>';
+    el('azT').innerHTML = h + '</tbody></table>';
+  }
+
+  /* --- i fornitori da cui ha comprato --- */
+  var fo = {};
+  car.forEach(function (m) {
+    var k = azForni(m), v = azValore(m);
+    fo[k] = fo[k] || {eur: 0, n: 0, muti: 0, art: {}};
+    if (v === null) fo[k].muti++; else fo[k].eur += v;
+    fo[k].n++;
+    fo[k].art[m.art] = 1;
+  });
+  var fk = Object.keys(fo).sort(function (x, y) { return fo[y].eur - fo[x].eur; });
+  el('azFornB').innerHTML = !fk.length
+    ? '<div class="vuoto">Nessun carico registrato a nome di ' + esc(z) + ' nel periodo scelto.</div>'
+    : '<table class="t"><thead><tr><th>Fornitore o riferimento</th><th class="n">Carichi</th>' +
+      '<th class="n">Articoli diversi</th><th class="n">Speso</th></tr></thead><tbody>' +
+      fk.map(function (k) {
+        return '<tr><td class="voce">' + esc(k) + '</td>' +
+          '<td class="n mono">' + nf(fo[k].n, 0) + '</td>' +
+          '<td class="n mono dim">' + nf(Object.keys(fo[k].art).length, 0) + '</td>' +
+          '<td class="n mono" style="font-weight:600">' +
+            (fo[k].eur > 0.5 ? eur(fo[k].eur, 0) : '<span class="dim">—</span>') +
+            (fo[k].muti ? '<span class="sub">' + plur(fo[k].muti, 'riga senza prezzo', 'righe senza prezzo') + '</span>' : '') +
+          '</td></tr>';
+      }).join('') +
+      '<tr class="tot"><td>' + plur(fk.length, 'fornitore', 'fornitori') + '</td>' +
+      '<td class="n mono">' + nf(sc.n, 0) + '</td><td></td>' +
+      '<td class="n mono" style="font-weight:700">' + eur(sc.eur, 0) + '</td></tr></tbody></table>';
+
+  /* --- i tecnici che hanno consumato per lei --- */
+  var tc2 = {};
+  sca.forEach(function (m) {
+    var k = m.tec || '(senza tecnico)', v = azValore(m);
+    tc2[k] = tc2[k] || {eur: 0, n: 0, muti: 0};
+    if (v === null) tc2[k].muti++; else tc2[k].eur += v;
+    tc2[k].n++;
+  });
+  var tk = Object.keys(tc2).sort(function (x, y) { return tc2[y].eur - tc2[x].eur; });
+  el('azTecAB').innerHTML = !tk.length
+    ? '<div class="vuoto">Nessun consumo attribuito a ' + esc(z) + ' nel periodo scelto. ' +
+      'I consumi arrivano dagli elenchi in <a href="#cons" data-vai="cons">Consumi settimanali</a>.</div>'
+    : '<table class="t"><thead><tr><th>Tecnico</th><th>La sua squadra</th><th class="n">Righe</th>' +
+      '<th class="n">Consumato</th></tr></thead><tbody>' +
+      tk.map(function (k) {
+        var sua = tecAz(k), fuori = sua && sua !== z;
+        return '<tr><td class="voce">' + esc(k) + '</td>' +
+          '<td>' + (sua ? '<span class="p ' + (azElenco().indexOf(sua) === 0 ? 'ok' : 'bl') + '">' + esc(azBreve(sua)) + '</span>' +
+            (fuori ? ' <span class="sub">lavora per ' + esc(azBreve(z)) + '</span>' : '')
+            : '<span class="dim">non so</span>') + '</td>' +
+          '<td class="n mono">' + nf(tc2[k].n, 0) + '</td>' +
+          '<td class="n mono" style="font-weight:600">' +
+            (tc2[k].eur > 0.5 ? eur(tc2[k].eur, 0) : '<span class="dim">—</span>') +
+            (tc2[k].muti ? '<span class="sub">' + plur(tc2[k].muti, 'riga senza prezzo', 'righe senza prezzo') + '</span>' : '') +
+          '</td></tr>';
+      }).join('') +
+      '<tr class="tot"><td>' + plur(tk.length, 'tecnico', 'tecnici') + '</td><td></td>' +
+      '<td class="n mono">' + nf(ss.n, 0) + '</td>' +
+      '<td class="n mono" style="font-weight:700">' + eur(ss.eur, 0) + '</td></tr></tbody></table>';
+
+  /* --- i movimenti, uno per uno --- */
+  var ord = mv.slice().sort(function (x, y) {
+    var kx, ky;
+    if (azMovSort.k === 'voce') { var ax = art(x.art), ay = art(y.art);
+      kx = norm(ax ? ax.voce : ''); ky = norm(ay ? ay.voce : ''); }
+    else if (azMovSort.k === 'tipo') { kx = x.tipo; ky = y.tipo; }
+    else if (azMovSort.k === 'eur') { kx = azValore(x) === null ? -1 : azValore(x); ky = azValore(y) === null ? -1 : azValore(y); }
+    else if (azMovSort.k === 'tec') { kx = norm(x.tec || ''); ky = norm(y.tec || ''); }
+    else { kx = x.data + String(x.seq).padStart(8, '0'); ky = y.data + String(y.seq).padStart(8, '0'); }
+    if (kx === ky) return 0;
+    return (kx < ky ? -1 : 1) * azMovSort.d;
+  });
+  function thm(key, et, cls) {
+    return '<th class="srt ' + (cls || '') + (azMovSort.k === key ? (azMovSort.d > 0 ? ' a' : ' d') : '') +
+      '" data-azmsrt="' + key + '">' + et + '</th>';
+  }
+  el('azMovB').innerHTML = !ord.length
+    ? '<div class="vuoto">Nessun movimento di ' + esc(z) + ' nel periodo scelto.</div>'
+    : '<table class="t"><thead><tr>' + thm('data', 'Data') + thm('voce', 'Articolo') +
+      thm('tipo', 'Tipo', 'c') + '<th class="n">Quantità</th>' + thm('eur', 'Valore', 'n') +
+      thm('tec', 'Tecnico') + '<th>Riferimento</th></tr></thead><tbody>' +
+      ord.map(function (m) {
+        var a = art(m.art), v = azValore(m);
+        return '<tr><td class="mono dim">' + dataIt(m.data) + '</td>' +
+          '<td class="voce">' + esc(a ? a.voce : '—') + '</td>' +
+          '<td class="c"><span class="p ' + (m.tipo === 'carico' ? 'ok' : 'sotto') + '">' + m.tipo + '</span></td>' +
+          '<td class="n mono">' + nf(qMov(m), 2) + ' ' + esc(a ? a.um : '') + '</td>' +
+          '<td class="n mono' + (v === null ? ' manca' : '') + '">' +
+            (v === null ? 'prezzo?' : eur(v, 2)) + '</td>' +
+          '<td class="dim">' + esc(m.tec || '—') + '</td>' +
+          '<td class="dim">' + esc(m.rif || '—') + '</td></tr>';
+      }).join('') +
+      '<tr class="tot"><td>' + plur(ord.length, 'movimento', 'movimenti') + '</td>' +
+      '<td class="dim" style="font-weight:400">comprato meno consumato</td><td></td><td></td>' +
+      '<td class="n mono" style="font-weight:700">' + (sc.eur - ss.eur > 0 ? '+' : '') +
+        eur(sc.eur - ss.eur, 0) + '</td><td></td><td></td></tr>' +
+      '</tbody></table>';
+
+  /* le dotazioni restano quelle di tutti: non sono né acquisti né consumi */
+  el('azDot').style.display = 'none';
+}
+
+/* comprato e consumato affiancati, per i primi articoli in valore */
+function azGraficoUna(z, c, col) {
+  var righe = [];
+  S.art.forEach(function (a) {
+    var r = c.perArt[a.id];
+    if (r.pa === null) return;
+    var cc = r.comprato[z] * r.pa, uu = r.consumato[z] * r.pa;
+    if (cc < 0.5 && uu < 0.5) return;
+    righe.push({a: a, c: cc, u: uu, max: Math.max(cc, uu)});
+  });
+  if (!righe.length) {
+    return '<div class="vuoto">Niente da disegnare: servono movimenti di ' + esc(z) +
+      ' su articoli con un prezzo di acquisto noto.</div>';
+  }
+  righe.sort(function (x, y) { return y.max - x.max; });
+  righe = righe.slice(0, 12);
+
+  var W = 860, L = 250, R = 86, bh = 11, gap2 = 3, grp = bh * 2 + gap2 + 12;
+  var H = righe.length * grp + 54;
+  var max = 0;
+  righe.forEach(function (x) { max = Math.max(max, x.max); });
+  max = max || 1;
+  var larg = W - L - R, x = function (v) { return L + (v / max) * larg; };
+
+  var s = '<div class="ch"><svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Comprato e consumato da ' + esc(z) + '">';
+  s += '<rect x="' + L + '" y="6" width="11" height="11" rx="2" fill="' + col + '" opacity=".88"/>' +
+    '<text class="ttl" x="' + (L + 17) + '" y="16">comprato</text>' +
+    '<rect x="' + (L + 110) + '" y="6" width="11" height="11" rx="2" fill="var(--ro-600)" opacity=".8"/>' +
+    '<text class="ttl" x="' + (L + 127) + '" y="16">consumato</text>';
+  [0.25, 0.5, 0.75, 1].forEach(function (f) {
+    s += '<line class="grid" x1="' + x(max * f) + '" y1="24" x2="' + x(max * f) + '" y2="' + (H - 18) + '"/>' +
+      '<text class="axv" x="' + x(max * f) + '" y="' + (H - 5) + '" text-anchor="middle">' + eur(max * f, 0) + '</text>';
+  });
+  s += '<line class="base" x1="' + L + '" y1="24" x2="' + L + '" y2="' + (H - 18) + '"/>';
+  righe.forEach(function (it, i) {
+    var y = 30 + i * grp;
+    s += '<rect x="' + L + '" y="' + y + '" width="' + Math.max(x(it.c) - L, it.c > 0 ? 1.5 : 0) +
+      '" height="' + bh + '" rx="2" fill="' + col + '" opacity=".88"/>';
+    s += '<rect x="' + L + '" y="' + (y + bh + gap2) + '" width="' + Math.max(x(it.u) - L, it.u > 0 ? 1.5 : 0) +
+      '" height="' + bh + '" rx="2" fill="var(--ro-600)" opacity=".8"/>';
+    s += '<text class="lbl" x="' + (L - 12) + '" y="' + (y + bh + 2) + '" text-anchor="end">' +
+      esc(tronca(it.a.voce, 34)) + '</text>';
+    var fin = Math.max(x(it.c), x(it.u)) + 7;
+    s += '<text class="lblv" x="' + fin + '" y="' + (y + bh + 2) + '">' + eur(it.c - it.u, 0) + '</text>';
+  });
+  s += '</svg></div>';
+  return s;
+}
+
+/* --- l'esportazione di una sola azienda: un foglio per ogni cosa --- */
+function azEsportaUna(z) {
+  var c = conto(), mv = azMoviDi(z);
+  var wb = XLSX.utils.book_new();
+
+  var art1 = [['Articolo', 'Categoria', 'UM', 'Comprato', 'Consumato', 'Saldo', 'Prezzo acquisto', 'Saldo in €']];
+  S.art.forEach(function (a) {
+    var r = c.perArt[a.id];
+    if (!r.comprato[z] && !r.consumato[z]) return;
+    art1.push([a.voce, a.cat, a.um, r.comprato[z], r.consumato[z], r.saldo[z],
+      r.pa === null ? '' : r.pa, r.pa === null ? '' : Math.round(r.saldo[z] * r.pa * 100) / 100]);
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(art1), 'Articoli');
+
+  var mov1 = [['Data', 'Tipo', 'Articolo', 'Quantità', 'UM', 'Valore', 'Tecnico', 'Riferimento', 'Nota']];
+  mv.slice().sort(function (x, y) { return x.data < y.data ? -1 : 1; }).forEach(function (m) {
+    var a = art(m.art), v = azValore(m);
+    mov1.push([m.data, m.tipo, a ? a.voce : '', qMov(m), a ? a.um : '',
+      v === null ? '' : Math.round(v * 100) / 100, m.tec || '', m.rif || '', m.note || '']);
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(mov1), 'Movimenti');
+
+  var fo = {};
+  mv.forEach(function (m) {
+    if (m.tipo !== 'carico') return;
+    var k = azForni(m), v = azValore(m);
+    fo[k] = fo[k] || {eur: 0, n: 0};
+    if (v !== null) fo[k].eur += v;
+    fo[k].n++;
+  });
+  var f1 = [['Fornitore o riferimento', 'Carichi', 'Speso']];
+  Object.keys(fo).sort(function (x, y) { return fo[y].eur - fo[x].eur; })
+    .forEach(function (k) { f1.push([k, fo[k].n, Math.round(fo[k].eur * 100) / 100]); });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(f1), 'Fornitori');
+
+  var tc3 = {};
+  mv.forEach(function (m) {
+    if (m.tipo !== 'scarico') return;
+    var k = m.tec || '(senza tecnico)', v = azValore(m);
+    tc3[k] = tc3[k] || {eur: 0, n: 0};
+    if (v !== null) tc3[k].eur += v;
+    tc3[k].n++;
+  });
+  var t1 = [['Tecnico', 'Squadra', 'Righe', 'Consumato']];
+  Object.keys(tc3).sort().forEach(function (k) {
+    t1.push([k, tecAz(k) || '', tc3[k].n, Math.round(tc3[k].eur * 100) / 100]);
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(t1), 'Tecnici');
+
+  XLSX.writeFile(wb, 'conto_' + norm(azBreve(z)).replace(/ /g, '_') + '_' + (c.da || 'sempre') + '.xlsx');
+}
+
 /* --- i comandi del conto fra le aziende --- */
 el('qAz').addEventListener('input', function () { cerca(rAz); });
-el('bAzXls').onclick = azEsporta;
+el('bAzXls').onclick = function () {
+  if (azChi && azElenco().indexOf(azChi) >= 0) azEsportaUna(azChi); else azEsporta();
+};
 
 /* --- i comandi dei consumi settimanali --- */
 el('dropCons').onclick = function () { chiediFile('.xlsx,.xls,.csv', leggiConsumi); };
@@ -5419,6 +5798,9 @@ window.FM = {S: function () { return S; }, giac: giac, stato: stato, consumo: co
   consRighe: consRighe, consData: consData, rCons: rCons,
   pendCons: function (v) { if (v !== undefined) { pendCons = v; rCons(); } return pendCons; },
   azDa: function (v) { if (v !== undefined) { azDa = v; rAz(); } return azDa; },
+  azChi: function (v) { if (v !== undefined) { azChi = v; rAz(); } return azChi; },
+  azMoviDi: azMoviDi, azValore: azValore, azForni: azForni, azEsportaUna: azEsportaUna,
+  ddtAz: ddtAz, ddtApplica: ddtApplica,
   dotQ: function (v) { if (v !== undefined) { dotQ = v; rDot(); } return dotQ; },
   ddtApplica: ddtApplica, ddtAggiungi: ddtAggiungi, ddtAnteriore: ddtAnteriore,
   furgSel: function (v) { if (v !== undefined) { furgSel = v; rMov(); } return furgSel; },
