@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FluentMagazzino — Norme sulla privacy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink-900:#11161c; --ink-800:#1d262f; --ink-700:#2f3a45; --ink-600:#4a5663;
+  --ink-500:#6b7784; --ink-400:#949fab; --ink-300:#c3cbd4; --ink-200:#e2e7ec;
+  --ink-100:#f0f3f6; --ink-50:#f7f9fb;
+  --em-700:#0f6b4f; --em-600:#157f5e; --em-50:#eefaf4;
+  --am-600:#9a6508; --am-50:#fdf6e7;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ink-50); color:var(--ink-800);
+  font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:15px; line-height:1.65; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:760px; margin:0 auto; padding:56px 24px 90px}
+header{border-bottom:1px solid var(--ink-200); padding-bottom:26px; margin-bottom:34px}
+.kicker{
+  font-family:"Space Grotesk",Inter,sans-serif; font-weight:600; font-size:11.5px;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--em-700); margin:0 0 10px
+}
+h1{
+  font-family:"Space Grotesk",Inter,sans-serif; font-weight:700;
+  font-size:30px; line-height:1.2; color:var(--ink-900); margin:0 0 10px; letter-spacing:-.01em
+}
+.sub{color:var(--ink-500); font-size:13.5px; margin:0}
+h2{
+  font-family:"Space Grotesk",Inter,sans-serif; font-weight:600; font-size:18px;
+  color:var(--ink-900); margin:38px 0 12px; letter-spacing:-.005em
+}
+p{margin:0 0 14px}
+ul{margin:0 0 14px; padding-left:22px}
+li{margin:0 0 7px}
+b,strong{font-weight:600; color:var(--ink-900)}
+a{color:var(--em-700)}
+code{
+  font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:12.5px; background:var(--ink-100); padding:1.5px 5px; border-radius:4px; color:var(--ink-700)
+}
+.box{
+  background:#fff; border:1px solid var(--ink-200); border-radius:12px;
+  padding:20px 22px; margin:0 0 14px
+}
+.box.em{background:var(--em-50); border-color:#bfe3d3}
+.box h3{
+  font-family:"Space Grotesk",Inter,sans-serif; font-weight:600; font-size:14.5px;
+  margin:0 0 8px; color:var(--ink-900)
+}
+.box p:last-child,.box ul:last-child{margin-bottom:0}
+footer{
+  margin-top:48px; padding-top:22px; border-top:1px solid var(--ink-200);
+  color:var(--ink-500); font-size:13px
+}
+footer a{color:var(--ink-600)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="kicker">FluentMagazzino</p>
+  <h1>Norme sulla privacy</h1>
+  <p class="sub">In vigore dal 24 novembre 2026 · ultimo aggiornamento 24 novembre 2026</p>
+</header>
+
+<div class="box em">
+  <h3>In breve</h3>
+  <p>FluentMagazzino è uno strumento interno di NSA srl e Sanitech srl per la gestione del
+  magazzino. Non è aperto al pubblico: vi accede solo un piccolo numero di persone autorizzate
+  per nome. L'applicazione funziona per intero dentro il browser, non ha server propri, non usa
+  strumenti di analisi o di profilazione e non cede dati a nessuno. L'unico dato personale che
+  tratta è l'indirizzo email con cui ciascuno accede, e serve soltanto a verificare che quella
+  persona sia fra quelle autorizzate.</p>
+</div>
+
+<h2>Chi tratta i dati</h2>
+<p>Titolare del trattamento sono <b>Nuove Soluzioni Ambientali srl (NSA srl)</b> e
+<b>Sanitech srl</b>, che usano l'applicazione per la gestione del magazzino comune.
+Per qualunque richiesta: <a href="mailto:boscomar98@gmail.com">boscomar98@gmail.com</a>.</p>
+
+<h2>Quali dati raccogliamo</h2>
+<ul>
+  <li><b>Il tuo indirizzo email Google.</b> Viene letto al momento dell'accesso, tramite l'ambito
+  <code>userinfo.email</code>, per il solo scopo di controllare che sia nell'elenco degli account
+  autorizzati. Non viene usato per inviarti comunicazioni e non viene comunicato a terzi.</li>
+  <li><b>I dati di magazzino che inserisci tu.</b> Articoli, giacenze, inventari, movimenti,
+  documenti di trasporto, listini, consumi, mezzi e nomi dei tecnici. Sono dati aziendali di
+  NSA srl e Sanitech srl, non dati personali di chi usa l'applicazione, con l'eccezione del
+  nome del tecnico che compare su un consumo.</li>
+</ul>
+<p>Non raccogliamo nient'altro. Nessun dato di navigazione, nessun identificativo pubblicitario,
+nessuna geolocalizzazione, nessun cookie di terze parti, nessuno strumento di statistica.</p>
+
+<h2>Dove finiscono</h2>
+<p>I dati restano in due soli posti, entrambi tuoi:</p>
+<ul>
+  <li><b>Nella memoria locale del tuo browser</b> (<code>localStorage</code>), sul computer che
+  stai usando. Serve a far funzionare l'applicazione anche senza collegamento.</li>
+  <li><b>In un unico file sul Google Drive dell'amministratore</b>, chiamato
+  <code>FluentMagazzino — dati.json</code>, condiviso con le persone autorizzate. È l'archivio
+  comune che tiene allineate le copie di ciascuno.</li>
+</ul>
+<p>Non esiste nessun altro server. Il codice della pagina è ospitato su GitHub Pages, che lo
+distribuisce come qualunque sito statico; i dati non ci passano mai.</p>
+
+<h2>L'accesso al tuo Google Drive</h2>
+<p>L'applicazione chiede l'ambito <code>https://www.googleapis.com/auth/drive.file</code>.
+È l'ambito più ristretto che Google offre per Drive: dà accesso <b>soltanto ai file creati
+dall'applicazione o che tu stesso le indichi</b> scegliendoli nella finestra di selezione di
+Google. Il resto del tuo Drive resta invisibile all'applicazione — non può elencarlo, leggerlo
+né modificarlo.</p>
+<div class="box">
+  <h3>Come togliere l'accesso</h3>
+  <p>In qualunque momento puoi revocare il permesso dalla pagina
+  <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener">
+  myaccount.google.com/permissions</a> del tuo account Google. Da quel momento
+  l'applicazione non raggiunge più nessun file. Per cancellare anche la copia locale basta
+  svuotare i dati del sito dalle impostazioni del browser.</p>
+</div>
+<p>L'uso e il trasferimento delle informazioni ricevute dalle API di Google da parte di
+FluentMagazzino rispettano le
+<a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener">Google
+API Services User Data Policy</a>, compresi i requisiti di uso limitato (Limited Use).</p>
+
+<h2>Perché li trattiamo e per quanto</h2>
+<p>La base giuridica è il legittimo interesse delle due società a gestire il proprio magazzino
+e a sapere quale azienda ha acquistato e consumato quale merce. I dati restano finché servono a
+quella gestione; l'amministratore può cancellarli in qualsiasi momento eliminando il file di
+archivio dal proprio Drive.</p>
+
+<h2>Con chi li condividiamo</h2>
+<p>Con nessuno. I dati non vengono venduti, ceduti, né comunicati a terzi per finalità
+pubblicitarie o di altro genere. Gli unici soggetti che li vedono sono le persone autorizzate
+all'accesso e Google, in quanto fornitore dello spazio di archiviazione scelto dall'utente.</p>
+
+<h2>I tuoi diritti</h2>
+<p>Ai sensi del Regolamento (UE) 2016/679 puoi chiedere in ogni momento di accedere ai tuoi dati,
+di correggerli, di cancellarli, di limitarne il trattamento o di opporti ad esso, e di riceverli
+in forma leggibile. Scrivi a <a href="mailto:boscomar98@gmail.com">boscomar98@gmail.com</a>:
+rispondiamo entro trenta giorni. Hai inoltre diritto di reclamo al Garante per la protezione dei
+dati personali.</p>
+
+<h2>Sicurezza</h2>
+<p>L'accesso è protetto dall'autenticazione Google e dall'elenco chiuso degli indirizzi
+autorizzati; i permessi sul file di archivio sono gestiti da Google Drive. Il collegamento è
+cifrato (HTTPS). Nessuna password viene mai chiesta o conservata dall'applicazione.</p>
+
+<h2>Modifiche</h2>
+<p>Se queste norme cambiano, la nuova versione compare su questa pagina con una nuova data in
+cima. Le modifiche sostanziali vengono comunicate direttamente alle persone autorizzate.</p>
+
+<footer>
+  NSA srl · Sanitech srl — Noto (SR), Italia ·
+  <a href="mailto:boscomar98@gmail.com">boscomar98@gmail.com</a><br>
+  <a href="./">Torna a FluentMagazzino</a>
+</footer>
+
+</div>
+</body>
+</html>

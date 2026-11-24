@@ -3598,22 +3598,34 @@ function gdPronto() {
 }
 
 /* ------------------------------- accesso ------------------------------- */
+function gdClient() {
+  if (!gd.tc) {
+    gd.tc = google.accounts.oauth2.initTokenClient({
+      client_id: GD.CLIENT, scope: GD.SCOPE,
+      callback: function (r) {
+        if (r.error) { gdStato('errore', r.error); return; }
+        gd.token = r.access_token;
+        gdChiEntra();
+      }
+    });
+  }
+  return gd.tc;
+}
+function gdChiedi() {
+  /* se si è già entrati una volta su questo browser, niente scelta account né consenso */
+  gdClient().requestAccessToken({prompt: (gd.email || gdConf().email) ? '' : 'select_account'});
+}
 function gdEntra() {
   gdStato('entro');
-  return gdPronto().then(function () {
-    if (!gd.tc) {
-      gd.tc = google.accounts.oauth2.initTokenClient({
-        client_id: GD.CLIENT, scope: GD.SCOPE,
-        callback: function (r) {
-          if (r.error) { gdStato('errore', r.error); return; }
-          gd.token = r.access_token;
-          gdChiEntra();
-        }
-      });
-    }
-    /* se si è già entrati una volta su questo browser, niente scelta account né consenso */
-    gd.tc.requestAccessToken({prompt: (gd.email || gdConf().email) ? '' : 'select_account'});
-  }).catch(function (e) { gdStato('errore', e.message); });
+  /* Il browser apre la finestra di Google solo se la si chiede dentro il clic. Se la
+     libreria è già in memoria la chiedo subito, senza passare da una Promise: aspettare
+     anche solo il giro successivo basta a far scadere il permesso del clic e la finestra
+     viene bloccata senza che l'utente veda niente. */
+  if (window.google && google.accounts && google.accounts.oauth2) {
+    try { gdChiedi(); return Promise.resolve(); }
+    catch (e) { gdStato('errore', e.message); return Promise.resolve(); }
+  }
+  return gdPronto().then(gdChiedi).catch(function (e) { gdStato('errore', e.message); });
 }
 function gdChiEntra() {
   return fetch('https://www.googleapis.com/oauth2/v3/userinfo',
@@ -3923,19 +3935,12 @@ function rGDrive() {
 function gdRiprendi() {
   var c = gdConf();
   if (!c.email || GD.AMMESSI.indexOf(c.email) < 0) { gdStato('spento'); return; }
-  gdPronto().then(function () {
-    gd.tc = google.accounts.oauth2.initTokenClient({
-      client_id: GD.CLIENT, scope: GD.SCOPE,
-      callback: function (r) {
-        if (r.error) { gdStato('spento', 'accesso da rifare'); return; }
-        gd.token = r.access_token;
-        gdChiEntra();
-      }
-    });
-    gdStato('entro', 'provo a ricollegarmi…');
-    gd.tc.requestAccessToken({prompt: ''});
-    setTimeout(function () { if (!gd.token) gdStato('spento'); }, 3000);
-  }).catch(function () { gdStato('spento'); });
+  /* La libreria si carica subito, così il primo clic su «Ricollegati» trova tutto pronto
+     e la finestra di Google si apre. Il collegamento però non lo tento da solo: senza un
+     clic il browser blocca la finestra, l'utente non vede niente e resta solo un errore
+     nella console. Meglio il banner, che un clic ce l'ha. */
+  gdStato('spento');
+  gdPronto().then(function () { gdClient(); }).catch(function () {});
 }
 
 /* ------------------------------ eventi ------------------------------ */
@@ -5419,6 +5424,7 @@ window.FM = {S: function () { return S; }, giac: giac, stato: stato, consumo: co
   furgSel: function (v) { if (v !== undefined) { furgSel = v; rMov(); } return furgSel; },
   GD: GD, gd: function () { return gd; }, gdUnisci: gdUnisci, gdUnisciLista: gdUnisciLista,
   gdEntra: gdEntra, gdTira: gdTira, gdSpingi: gdSpingi, gdStato: gdStato, gdConf: gdConf,
+  gdRiprendi: gdRiprendi, gdChiedi: gdChiedi,
   gdConfScrivi: gdConfScrivi, gdChiEntra: gdChiEntra, gdEsci: gdEsci};
 })();
 </script>
