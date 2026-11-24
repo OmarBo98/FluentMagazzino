@@ -997,7 +997,14 @@ var SEED_PREZZI = [
   ['antitarlo', 5.43], ['wey magnetic guscio blu', 2.94],
   ['seglira flay basf', 26.00], ['schiuma moscerini', 4.60],
   ['advision mosche', 2.97], ['racumin schiuma attiva', 42.20],
-  ['stazione trasparente', 4.65], ['neon aura', 14.58]
+  ['stazione trasparente', 4.65], ['neon aura', 14.58],
+  ['attrattivo Rat Trap sintetico alla nocciola per ratti', 7.15],
+  ['bomboletta repellente citronella citro folis', 5.85],
+  ['esca alimentare per topi e ratti', 3.96],
+  ['granulare formiche india factor (per casi speciali)', 6.70],
+  ['multiseal sigillante plastico antiroditori', 12.00],
+  ['paratie vaschetta plus orma cod.243-vas-t', 1.30],
+  ['stazione trasparente piccola terra slim', 0.63]
 ];
 /* due articoli che in magazzino non c'erano: li porta l'ordine ORMA */
 var SEED_NUOVI = [
@@ -1005,8 +1012,8 @@ var SEED_NUOVI = [
   {voce: 'corda feromonica per lepidotteri', cat: 'lepidotteri', um: 'mt', acq: 14.48}
 ];
 function applicaPrezzi(s) {
-  if (s.settings.prezziOrdini2611c) return;
-  s.settings.prezziOrdini2611c = 1;
+  if (s.settings.prezziOrdini2611d) return;
+  s.settings.prezziOrdini2611d = 1;
   var perVoce = {}, perArt = {};
   s.listino.forEach(function (l) { perVoce[norm(l.voce)] = l; if (l.art) perArt[l.art] = l; });
   var byArt = {};
