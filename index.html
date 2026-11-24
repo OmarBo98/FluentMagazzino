@@ -979,7 +979,25 @@ var SEED_PREZZI = [
   ['labiogard', 4.22], ['labspray', 2.62], ['recidal sil', 10.82],
   ['Bomboletta di Piretro', 5.85], ['erogatore automatico piretro', 14.22],
   ['trappola a scatto t-rex', 2.67], ['trappola mosche M', 2.93],
-  ['trappola mosche L', 4.29], ['trappola drosofilidi cartoncino', 3.09]
+  ['trappola mosche L', 4.29], ['trappola drosofilidi cartoncino', 3.09],
+  /* dai listini ORMA 2026 e NEWPHARM R4 2026: su ORMA il prezzo pagato è metà listino,
+     su NEWPHARM il listino riporta già il prezzo scontato. Dove il nome non coincide
+     si è preso un prodotto dello stesso genere.                                      */
+  ['trappola blatte con feromone geotrap', 0.49], ['trappola collante in cartoncino per roditori', 0.36],
+  ['trappola lepidotteri unitrap', 8.44], ['ricarica all beel trap', 2.50],
+  ['erogatore gel blatte e formiche', 4.00], ['pherok (drosofilidi) (feromone per drosofilidi)', 7.32],
+  ['rattipro gel roditori', 23.11], ['trappola termiti termitistop', 8.44],
+  ['blocco brodifacoum', 3.85], ['graniglia brodifacoum', 3.96],
+  ['pasta bromadiolone', 3.37], ['pastiglia per geotrap', 0.17],
+  ['rat spray', 10.35], ['neon flypod', 14.58],
+  ['pannello per spennellatura', 2.97], ['stazione trasparente piccola blu', 0.63],
+  ['pasta brodifacoum', 3.44], ['pasta colecalciferolo', 33.00],
+  ['pasta difenacoum', 3.65], ['dobol gel blatte', 10.53],
+  ['neon 36w', 14.58], ['alphi wg', 65.48],
+  ['antitarlo', 5.43], ['wey magnetic guscio blu', 2.94],
+  ['seglira flay basf', 26.00], ['schiuma moscerini', 4.60],
+  ['advision mosche', 2.97], ['racumin schiuma attiva', 42.20],
+  ['stazione trasparente', 4.65], ['neon aura', 14.58]
 ];
 /* due articoli che in magazzino non c'erano: li porta l'ordine ORMA */
 var SEED_NUOVI = [
@@ -987,8 +1005,8 @@ var SEED_NUOVI = [
   {voce: 'corda feromonica per lepidotteri', cat: 'lepidotteri', um: 'mt', acq: 14.48}
 ];
 function applicaPrezzi(s) {
-  if (s.settings.prezziOrdini2611b) return;
-  s.settings.prezziOrdini2611b = 1;
+  if (s.settings.prezziOrdini2611c) return;
+  s.settings.prezziOrdini2611c = 1;
   var perVoce = {}, perArt = {};
   s.listino.forEach(function (l) { perVoce[norm(l.voce)] = l; if (l.art) perArt[l.art] = l; });
   var byArt = {};
