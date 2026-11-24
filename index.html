@@ -969,8 +969,7 @@ function statoIniziale() {
 
 /* ---------- prezzi di acquisto ricavati dagli ordini ORMA e NEWPHARM (nov 2026) ----------
    Vengono dai documenti d'ordine, non dai listini: è quello che le due aziende hanno
-   pagato davvero. Si scrivono solo dove il prezzo manca, così le correzioni fatte a
-   mano restano al loro posto.                                                        */
+   pagato davvero, perciò hanno la precedenza sul prezzo che era in archivio.         */
 var SEED_PREZZI = [
   ['Erogatore Fusion', 4.70], ['Geracyp', 11.25], ['Granulare Formiche', 6.70],
   ['Masterbox Trasparente', 4.99], ['NEXA Formiche', 17.80], ['Perme Plus', 15.80],
@@ -988,8 +987,8 @@ var SEED_NUOVI = [
   {voce: 'corda feromonica per lepidotteri', cat: 'lepidotteri', um: 'mt', acq: 14.48}
 ];
 function applicaPrezzi(s) {
-  if (s.settings.prezziOrdini2611) return;
-  s.settings.prezziOrdini2611 = 1;
+  if (s.settings.prezziOrdini2611b) return;
+  s.settings.prezziOrdini2611b = 1;
   var perVoce = {}, perArt = {};
   s.listino.forEach(function (l) { perVoce[norm(l.voce)] = l; if (l.art) perArt[l.art] = l; });
   var byArt = {};
@@ -997,7 +996,8 @@ function applicaPrezzi(s) {
   SEED_PREZZI.forEach(function (p) {
     var l = perVoce[norm(p[0])];
     if (!l) { var a = byArt[norm(p[0])]; if (a) l = perArt[a.id]; }
-    if (l) { if (l.acq === null || l.acq === undefined || l.acq === '') l.acq = p[1]; return; }
+    /* Omar: sul prezzo fa fede l'ordine, non quello che c'era in app */
+    if (l) { l.acq = p[1]; return; }
     /* l'articolo c'è ma non ha una riga di listino: la riga nasce col prezzo dell'ordine */
     var a2 = byArt[norm(p[0])];
     if (!a2) return;
