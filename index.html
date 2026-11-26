@@ -984,8 +984,8 @@ var SEED_PREZZI = [
      su NEWPHARM il listino riporta già il prezzo scontato. Dove il nome non coincide
      si è preso un prodotto dello stesso genere.                                      */
   ['trappola blatte con feromone geotrap', 0.49], ['trappola collante in cartoncino per roditori', 0.36],
-  ['trappola lepidotteri unitrap', 8.44], ['ricarica all beel trap', 2.50],
-  ['erogatore gel blatte e formiche', 4.00], ['pherok (drosofilidi) (feromone per drosofilidi)', 7.32],
+  ['trappola lepidotteri unitrap', 19.80], ['ricarica all beel trap', 2.50],
+  ['erogatore gel blatte e formiche', 5.80], ['pherok (drosofilidi) (feromone per drosofilidi)', 7.32],
   ['rattipro gel roditori', 23.11], ['trappola termiti termitistop', 8.44],
   ['blocco brodifacoum', 3.85], ['graniglia brodifacoum', 3.96],
   ['pasta bromadiolone', 3.37], ['pastiglia per geotrap', 0.17],
@@ -1002,7 +1002,7 @@ var SEED_PREZZI = [
   ['bomboletta repellente citronella citro folis', 5.85],
   ['esca alimentare per topi e ratti', 3.96],
   ['granulare formiche india factor (per casi speciali)', 6.70],
-  ['multiseal sigillante plastico antiroditori', 12.00],
+  ['multiseal sigillante plastico antiroditori', 19.80],
   ['paratie vaschetta plus orma cod.243-vas-t', 1.30],
   ['stazione trasparente piccola terra slim', 0.63]
 ];
@@ -1012,8 +1012,8 @@ var SEED_NUOVI = [
   {voce: 'corda feromonica per lepidotteri', cat: 'lepidotteri', um: 'mt', acq: 14.48}
 ];
 function applicaPrezzi(s) {
-  if (s.settings.prezziOrdini2611d) return;
-  s.settings.prezziOrdini2611d = 1;
+  if (s.settings.prezziGenicco2611) return;
+  s.settings.prezziGenicco2611 = 1;
   var perVoce = {}, perArt = {};
   s.listino.forEach(function (l) { perVoce[norm(l.voce)] = l; if (l.art) perArt[l.art] = l; });
   var byArt = {};
@@ -1022,7 +1022,10 @@ function applicaPrezzi(s) {
     var l = perVoce[norm(p[0])];
     if (!l) { var a = byArt[norm(p[0])]; if (a) l = perArt[a.id]; }
     /* Omar: sul prezzo fa fede l'ordine, non quello che c'era in app */
+    var aa = byArt[norm(p[0])];
+    if (aa && perArt[aa.id]) perArt[aa.id].acq = p[1];   /* la riga davvero collegata */
     if (l) { l.acq = p[1]; return; }
+    if (aa && perArt[aa.id]) return;
     /* l'articolo c'è ma non ha una riga di listino: la riga nasce col prezzo dell'ordine */
     var a2 = byArt[norm(p[0])];
     if (!a2) return;
